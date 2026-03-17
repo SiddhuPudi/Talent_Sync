@@ -1,20 +1,28 @@
+# Dependencies
 node_modules/
 
+#Environment Variables
 .env
 
+#Logs
 logs/
 *.log
 
+#Uploads
 uploads/
 
+#Prisma
 node_modules/.prisma
 /src/generated/prisma
 
+#OS files
 .DS_Store
 Thumbs.db
 
+#Build files
 dist/
 build/
 .tmp/
 
+#Coverage
 coverage/
