@@ -7,9 +7,11 @@ node_modules/
 #Logs
 logs/
 *.log
+logs
 
 #Uploads
 uploads/
+uploads
 
 #Prisma
 node_modules/.prisma

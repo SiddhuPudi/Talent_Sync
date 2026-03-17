@@ -11,6 +11,7 @@ const applicationRoutes = require("./routes/applicationRoutes");
 const errorMiddleware = require("./middlewares/errorMiddleware");
 const apiLimiter = require("./middlewares/rateLimiter");
 const requestLogger = require("./middlewares/requestLogger");
+const path = require("path");
 const app = express();
 
 app.use(cors());
@@ -24,8 +25,9 @@ app.use("/api/profile", profileRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/applications", applicationRoutes);
 app.use(errorMiddleware);
+app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 app.get("/", (req, res) => {
-  res.send("LinkedIn Lite Backend Running");
+  res.send("Talent Sync Backend Running");
 });
 
 module.exports = app;
