@@ -8,6 +8,7 @@ const userRoutes = require("./routes/userRoutes");
 const profileRoutes = require("./routes/profileRoutes");
 const jobRoutes = require("./routes/jobRoutes");
 const applicationRoutes = require("./routes/applicationRoutes");
+const connectionRoutes = require("./routes/connectionRoutes");
 const errorMiddleware = require("./middlewares/errorMiddleware");
 const apiLimiter = require("./middlewares/rateLimiter");
 const requestLogger = require("./middlewares/requestLogger");
@@ -24,6 +25,7 @@ app.use("/api/jobs", jobRoutes);
 app.use("/api/profile", profileRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/applications", applicationRoutes);
+app.use("/api/connections", connectionRoutes);
 app.use(errorMiddleware);
 app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 app.get("/", (req, res) => {
