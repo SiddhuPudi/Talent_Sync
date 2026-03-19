@@ -14,6 +14,30 @@ async function getMessages(userId, otherUserId) {
     });
 }
 
+async function getUnreadCount(userId) {
+    return prisma.message.count({
+        where: {
+            receiverId: userId,
+            isRead: false
+        }
+    });
+}
+
+async function markAsRead(userId, otherUserId) {
+    return prisma.message.updateMany({
+        where: {
+            senderId: otherUserId,
+            receiverId: userId,
+            isRead: false
+        },
+        data: {
+            isRead: true
+        }
+    });
+}
+
 module.exports = {
-    getMessages
+    getMessages,
+    getUnreadCount,
+    markAsRead
 };

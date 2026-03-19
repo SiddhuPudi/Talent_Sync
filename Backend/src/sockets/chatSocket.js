@@ -11,7 +11,6 @@ module.exports = (io) => {
         });
         socket.on("sendMessage", async (data) => {
             const { senderId, receiverId, content } = data;
-            console.log("Incoming message: ", data);
             try {
                 const connection = await prisma.connection.findFirst({
                     where: {
@@ -30,14 +29,19 @@ module.exports = (io) => {
                     data: {
                         senderId,
                         receiverId,
-                        content
+                        content,
+                        isRead: false
                     }
                 });
                 console.log("💾 Message saved:", message);
                 const receiverSocketId = onlineUsers.get(receiverId.toString());
                 if (receiverSocketId) {
                     io.to(receiverSocketId).emit("receiveMessage", message);
-                    console.log("📥 Message delivered in real-time");
+                    io.to(receiverSocketId).emit("newNotification", {
+                        type: "message",
+                        from: senderId,
+                        message: content
+                    });
                 } else {
                     console.log("📥 User offline → message stored only");
                 }
