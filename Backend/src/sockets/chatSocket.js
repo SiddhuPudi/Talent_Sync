@@ -1,10 +1,13 @@
 const prisma = require("../config/prisma");
+const onlineUsers = require("./onlineUsers");
 
 module.exports = (io) => {
     io.on("connection", (socket) => {
         console.log("User connected: ", socket.id);
         socket.on("join", (userId) => {
-            socket.join(userId.toString());
+            onlineUsers.set(userId.toString(), socket.id);
+            console.log("User online: ", userId);
+            io.emit("userOnline", userId);
         });
         socket.on("sendMessage", async (data) => {
             const { senderId, receiverId, content } = data;
@@ -20,10 +23,9 @@ module.exports = (io) => {
                 });
                 if(!connection) {
                     return socket.emit("errorMessage", {
-                        message: "You are not connected with this user"
+                        message: "❌ You are not connected with this user"
                     });
                 }
-                console.log("✅ Connection found");
                 const message = await prisma.message.create({
                     data: {
                         senderId,
@@ -32,13 +34,30 @@ module.exports = (io) => {
                     }
                 });
                 console.log("💾 Message saved:", message);
-                io.to(receiverId.toString()).emit("receiveMessage", message);
+                const receiverSocketId = onlineUsers.get(receiverId.toString());
+                if (receiverSocketId) {
+                    io.to(receiverSocketId).emit("receiveMessage", message);
+                    console.log("📥 Message delivered in real-time");
+                } else {
+                    console.log("📥 User offline → message stored only");
+                }
             } catch (error) {
                 console.error(error);
             }
         });
         socket.on("disconnect", () => {
-            console.log("User disconnected: ", socket.id);
+            let disconnectedUser = null;
+            for (let [userId, sockId] of onlineUsers.entries()) {
+                if (sockId === socket.id) {
+                    disconnectedUser = userId;
+                    onlineUsers.delete(userId);
+                    break;
+                }
+            }
+            if (disconnectedUser) {
+                console.log("User offline: ", disconnectedUser);
+                io.emit("userOffline", disconnectedUser);
+            }
         });
     });
 };
