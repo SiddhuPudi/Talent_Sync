@@ -10,6 +10,18 @@ module.exports = (io) => {
             console.log("User online: ", userId);
             io.emit("userOnline", userId);
         });
+        socket.on("typing", ({ senderId, receiverId }) => {
+            const receiverSocketId = onlineUsers.get(receiverId.toString());
+            if (receiverSocketId) {
+                io.to(receiverSocketId).emit("userTyping", { senderId });
+            }
+        });
+        socket.on("stopTyping", ({ senderId, receiverId }) => {
+            const receiverSocketId = onlineUsers.get(receiverId.toString());
+            if (receiverId) {
+                io.to(receiverSocketId).emit("userStoppedTyping", { senderId });
+            }
+        });
         socket.on("sendMessage", async (data) => {
             const { senderId, receiverId, content } = data;
             try {
