@@ -1,4 +1,5 @@
 const prisma = require("../config/prisma");
+const notificationService = require("./notificationService");
 
 async function applyToJob(userId, jobId, resume) {
     const existingApplication = await prisma.application.findFirst({
@@ -15,8 +16,19 @@ async function applyToJob(userId, jobId, resume) {
             userId: userId,
             jobId: Number(jobId),
             resume
+        },
+        include: {
+            job: { select: { postedBy: true } }
         }
     });
+    if(!application.job) {
+        throw new Error("Job not found");
+    }
+    await notificationService.createNotification(
+        Number(application.job.postedBy),
+        "job_application",
+        "New application received for your job"
+    );
     return application;
 }
 

@@ -23,6 +23,7 @@ model User {
   receivedRequests Connection[] @relation("ReceivedRequests")
   sentMessages     Message[] @relation("SentMessages")
   receivedMessages Message[] @relation("ReceivedMessages")
+  notifications    Notification[]
 }
 
 model Profile {
@@ -86,4 +87,15 @@ model Message {
 
   sender   User @relation("SentMessages", fields: [senderId], references: [id])
   receiver User @relation("ReceivedMessages", fields: [receiverId], references: [id])
+}
+
+model Notification {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  type      String
+  message   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
 }

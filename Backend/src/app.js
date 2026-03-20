@@ -10,6 +10,7 @@ const jobRoutes = require("./routes/jobRoutes");
 const applicationRoutes = require("./routes/applicationRoutes");
 const connectionRoutes = require("./routes/connectionRoutes");
 const chatRoutes = require("./routes/chatRoutes");
+const notificationRoutes = require("./routes/notificationRoutes");
 const errorMiddleware = require("./middlewares/errorMiddleware");
 const apiLimiter = require("./middlewares/rateLimiter");
 const requestLogger = require("./middlewares/requestLogger");
@@ -28,6 +29,7 @@ app.use("/api/users", userRoutes);
 app.use("/api/applications", applicationRoutes);
 app.use("/api/connections", connectionRoutes);
 app.use("/api/chat", chatRoutes);
+app.use("/api/notifications", notificationRoutes);
 app.use(errorMiddleware);
 app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 app.get("/", (req, res) => {

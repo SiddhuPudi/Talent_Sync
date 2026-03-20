@@ -1,5 +1,6 @@
 const prisma = require("../config/prisma");
 const onlineUsers = require("./onlineUsers");
+const notificationService = require("../services/notificationService");
 
 module.exports = (io) => {
     io.on("connection", (socket) => {
@@ -35,6 +36,11 @@ module.exports = (io) => {
                 });
                 console.log("💾 Message saved:", message);
                 const receiverSocketId = onlineUsers.get(receiverId.toString());
+                await notificationService.createNotification(
+                    receiverId,
+                    "message",
+                    `New message from user ${senderId}`
+                );
                 if (receiverSocketId) {
                     io.to(receiverSocketId).emit("receiveMessage", message);
                     io.to(receiverSocketId).emit("newNotification", {

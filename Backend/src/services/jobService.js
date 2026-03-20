@@ -7,6 +7,23 @@ async function createJob(userId, data) {
             postedBy: userId
         }
     });
+    const users = await prisma.user.findMany({
+        select: { id: true }
+    });
+    const notificationsData = users
+        .filter(user => user.id !== userId)
+        .map(user => ({
+            userId: Number(user.id),
+            type: "job_posted",
+            message: `New job posted: ${data.title}`
+        }));
+
+    if (notificationsData.length > 0) {
+        await prisma.notification.createMany({
+            data: notificationsData,
+            skipDuplicates: true
+        });
+    }
     return job;
 }
 
