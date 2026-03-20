@@ -1,4 +1,5 @@
 const prisma = require("../config/prisma");
+const redis = require("../config/redis");
 
 async function createJob(userId, data) {
     const job = await prisma.job.create({
@@ -77,6 +78,11 @@ async function getAllJobs(filters) {
             mode: "insensitive"
         };
     }
+    const cacheKey = `jobs:${JSON.stringify(filters)}`;
+    const cached = await redis.get(cacheKey);
+    if (cached) {
+        return JSON.parse(cached);
+    }
     const jobs = await prisma.job.findMany({
         where,
         skip,
@@ -92,12 +98,14 @@ async function getAllJobs(filters) {
         orderBy: { createdAt: "desc" }
     });
     const totalJobs = await prisma.job.count({ where });
-    return {
+    const result = {
         totalJobs,
         page,
         limit,
         jobs
     };
+    await redis.setEx(cacheKey, 60, JSON.stringify(result));
+    return result;
 }
 
 async function getJobById(jobId) {

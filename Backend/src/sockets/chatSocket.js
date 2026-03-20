@@ -1,13 +1,12 @@
 const prisma = require("../config/prisma");
-const onlineUsers = require("./onlineUsers");
+const redis = require("../config/redis");
 const notificationService = require("../services/notificationService");
 
 module.exports = (io) => {
     io.on("connection", (socket) => {
         console.log("User connected: ", socket.id);
-        socket.on("join", (userId) => {
-            onlineUsers.set(userId.toString(), socket.id);
-            console.log("User online: ", userId);
+        socket.on("join", async (userId) => {
+            await redis.set(`online: ${userId}`, socket.id);
             io.emit("userOnline", userId);
         });
         socket.on("typing", ({ senderId, receiverId }) => {
@@ -47,7 +46,7 @@ module.exports = (io) => {
                     }
                 });
                 console.log("💾 Message saved:", message);
-                const receiverSocketId = onlineUsers.get(receiverId.toString());
+                const receiverSocketId = await redis.get(`online:${receiverId}`);
                 await notificationService.createNotification(
                     receiverId,
                     "message",
@@ -67,12 +66,14 @@ module.exports = (io) => {
                 console.error(error);
             }
         });
-        socket.on("disconnect", () => {
-            let disconnectedUser = null;
-            for (let [userId, sockId] of onlineUsers.entries()) {
-                if (sockId === socket.id) {
-                    disconnectedUser = userId;
-                    onlineUsers.delete(userId);
+        socket.on("disconnect", async () => {
+            const keys = await redis.keys("online:*");
+            for (let key of keys) {
+                const socketId = await redis.get(key);
+                if (socketId === socket.id) {
+                    const userId = key.split(":")[1];
+                    await redis.del(key);
+                    io.emit("userOffline", userId);
                     break;
                 }
             }

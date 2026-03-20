@@ -1,6 +1,8 @@
 const app = require("./src/app");
 const http = require("http");
 const { Server } = require("socket.io");
+const { createAdapter } = require("@socket.io/redis-adapter");
+const { createClient } = require("redis");
 
 const PORT = process.env.PORT || 3000;
 
@@ -10,6 +12,16 @@ const io = new Server(server, {
     origin: "*",
   }
 });
+
+const pubClient = createClient({ url: "redis://localhost:6379" });
+const subClient = pubClient.duplicate();
+
+(async () => {
+  await pubClient.connect();
+  await subClient.connect();
+})();
+
+io.adapter(createAdapter(pubClient, subClient));
 
 require("./src/sockets/chatSocket")(io);
 
