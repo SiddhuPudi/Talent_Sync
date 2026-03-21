@@ -35,5 +35,7 @@ app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 app.get("/", (req, res) => {
   res.send("Talent Sync Backend Running");
 });
-
+app.get("/health", (req, res) => {
+  res.status(200).json({ status: "OK" });
+});
 module.exports = app;
