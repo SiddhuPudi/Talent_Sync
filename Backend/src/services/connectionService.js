@@ -1,5 +1,5 @@
 const prisma = require("../config/prisma");
-const notificationService = require("./notificationService");
+const { sendNotificationEvent } = require("./kafkaProducer");
 
 async function sendRequest(senderId, receiverId) {
     senderId = Number(senderId);
@@ -23,11 +23,11 @@ async function sendRequest(senderId, receiverId) {
             throw new Error("You are already connected");
         }
     }
-    await notificationService.createNotification(
-        Number(receiverId),
-        "connection_request",
-        `User ${senderId} sent you a connection request`
-    );
+    await sendNotificationEvent({
+        userId: Number(receiverId),
+        type: "connection_request",
+        message: `User ${senderId} sent you a connection request`
+    });
     return prisma.connection.create({
         data: {
             senderId,
@@ -49,11 +49,11 @@ async function respondRequest(connectionId, userId, status) {
     if (connection.status !== "pending") {
         throw new Error("Request already handled");
     }
-    await notificationService.createNotification(
-        Number(connection.senderId),
-        "connection_accepted",
-        `User ${userId} accepted your request`
-    );
+    await sendNotificationEvent({
+        userId: Number(connection.senderId),
+        type: "connection_accepted",
+        message: `User ${userId} accepted your request`
+    });
     return prisma.connection.update({
         where: { id: Number(connectionId) },
         data: { status }

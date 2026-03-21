@@ -1,5 +1,5 @@
 const prisma = require("../config/prisma");
-const notificationService = require("./notificationService");
+const { sendNotificationEvent } = require("./kafkaProducer");
 
 async function applyToJob(userId, jobId, resume) {
     const existingApplication = await prisma.application.findFirst({
@@ -24,11 +24,11 @@ async function applyToJob(userId, jobId, resume) {
     if(!application.job) {
         throw new Error("Job not found");
     }
-    await notificationService.createNotification(
-        Number(application.job.postedBy),
-        "job_application",
-        "New application received for your job"
-    );
+    await sendNotificationEvent({
+        userId: Number(application.job.postedBy),
+        type: "job_application",
+        message: "New application received for your job"
+    });
     return application;
 }
 

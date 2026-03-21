@@ -1,23 +1,24 @@
 const prisma = require("../config/prisma");
 const redis = require("../config/redis");
 const notificationService = require("../services/notificationService");
+const { sendNotificationEvent } = require("../services/kafkaProducer");
 
 module.exports = (io) => {
     io.on("connection", (socket) => {
         console.log("User connected: ", socket.id);
         socket.on("join", async (userId) => {
-            await redis.set(`online: ${userId}`, socket.id);
+            await redis.set(`online:${userId}`, socket.id);
             io.emit("userOnline", userId);
         });
-        socket.on("typing", ({ senderId, receiverId }) => {
-            const receiverSocketId = onlineUsers.get(receiverId.toString());
+        socket.on("typing", async ({ senderId, receiverId }) => {
+            const receiverSocketId = await redis.get(`online:${receiverId}`);
             if (receiverSocketId) {
                 io.to(receiverSocketId).emit("userTyping", { senderId });
             }
         });
-        socket.on("stopTyping", ({ senderId, receiverId }) => {
-            const receiverSocketId = onlineUsers.get(receiverId.toString());
-            if (receiverId) {
+        socket.on("stopTyping", async ({ senderId, receiverId }) => {
+            const receiverSocketId = await redis.get(`online:${receiverId}`);
+            if (receiverSocketId) {
                 io.to(receiverSocketId).emit("userStoppedTyping", { senderId });
             }
         });
@@ -46,12 +47,12 @@ module.exports = (io) => {
                     }
                 });
                 console.log("💾 Message saved:", message);
+                await sendNotificationEvent({
+                    userId: receiverId,
+                    type: "message",
+                    message: `New message from user ${senderId}`
+                });
                 const receiverSocketId = await redis.get(`online:${receiverId}`);
-                await notificationService.createNotification(
-                    receiverId,
-                    "message",
-                    `New message from user ${senderId}`
-                );
                 if (receiverSocketId) {
                     io.to(receiverSocketId).emit("receiveMessage", message);
                     io.to(receiverSocketId).emit("newNotification", {
@@ -76,10 +77,6 @@ module.exports = (io) => {
                     io.emit("userOffline", userId);
                     break;
                 }
-            }
-            if (disconnectedUser) {
-                console.log("User offline: ", disconnectedUser);
-                io.emit("userOffline", disconnectedUser);
             }
         });
     });
