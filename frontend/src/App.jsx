@@ -7,19 +7,62 @@ import Jobs from "./pages/Jobs";
 import Chat from "./pages/Chat";
 import Notifications from "./pages/Notifications";
 import Auth from "./pages/Auth";
+import ProtectedRoute from "./components/ProtectedRoute";
+import PublicRoute from "./components/PublicRoute";
 
 function App() {
   return (
     <BrowserRouter>
-      <MainLayout>
         <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/jobs" element={<Jobs />} />
-          <Route path="/chat" element={<Chat />} />
-          <Route path="/notifications" element={<Notifications />} />
-          <Route path="/auth" element={<Auth />} />
+          <Route 
+            path="/auth"
+            element={
+              <PublicRoute>
+                <Auth />
+              </PublicRoute>
+            } 
+          />
+          <Route 
+            path="/" 
+            element={
+              <ProtectedRoute>
+                <MainLayout>
+                  <Home />
+                </MainLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route e
+            path="/jobs" 
+            element={
+              <ProtectedRoute>
+                <MainLayout>
+                  <Jobs />
+                </MainLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/chat" 
+            element={
+              <ProtectedRoute>
+                <MainLayout>
+                  <Chat />
+                </MainLayout>
+              </ProtectedRoute>
+            } 
+          />
+          <Route
+            path="/notifications" 
+            element={
+              <ProtectedRoute>
+                <MainLayout>
+                  <Notifications />
+                </MainLayout>
+              </ProtectedRoute>
+            }
+          />
         </Routes>
-      </MainLayout>
     </BrowserRouter>
   );
 }

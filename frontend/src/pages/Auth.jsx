@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { loginUser, registerUser } from "../features/auth/authService";
+import { useAuth } from "../store/AuthContext";
 
 function Auth() {
+  const { login } = useAuth();
   const [isLogin, setIsLogin] = useState(true);
   const [form, setForm] = useState({
     name: "",
@@ -26,7 +28,7 @@ function Auth() {
       } else {
         data = await registerUser(form);
       }
-      localStorage.setItem("token", data.token);
+      login(data.token);
       alert("Success 🚀");
     } catch (err) {
       console.log(err);
