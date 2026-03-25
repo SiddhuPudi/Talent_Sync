@@ -7,6 +7,19 @@ exports.sendRequest = async (req, res) => {
             req.user.id,
             receiverId
         );
+        
+        const io = req.app.get("io");
+        if (io) {
+            const redis = require("../config/redis");
+            const receiverSocketId = await redis.get(`online:${receiverId}`);
+            if (receiverSocketId) {
+                io.to(receiverSocketId).emit("newNotification", {
+                    type: "connection_request",
+                    from: req.user.id,
+                    message: "You received a new connection request"
+                });
+            }
+        }
         res.json(connection);
     } catch (error) {
         res.status(400).json({ error: error.message });
@@ -26,6 +39,20 @@ exports.respondRequest = async (req, res) => {
             req.user.id,
             status
         );
+        
+        const io = req.app.get("io");
+        if (io) {
+            const redis = require("../config/redis");
+            // The person being responded to is the original sender
+            const receiverSocketId = await redis.get(`online:${result.senderId}`);
+            if (receiverSocketId) {
+                io.to(receiverSocketId).emit("newNotification", {
+                    type: `connection_${status}`,
+                    from: req.user.id,
+                    message: `Your connection request was ${status}`
+                });
+            }
+        }
         res.json(result);
     } catch (error) {
         res.status(400).json({ error: error.message });

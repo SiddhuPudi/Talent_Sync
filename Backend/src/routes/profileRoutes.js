@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 
 const authMiddleware = require("../middlewares/authMiddleware");
-const { updateProfile, getProfile } = require("../controllers/profileController");
+const { updateProfile, getProfile, getProfileStats } = require("../controllers/profileController");
 
 /**
  * @swagger
@@ -52,5 +52,7 @@ router.get("/me", authMiddleware, getProfile);
  *              description: Profile updated
  */
 router.put("/update", authMiddleware, updateProfile);
+
+router.get("/stats/:id", authMiddleware, getProfileStats);
 
 module.exports = router;

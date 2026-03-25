@@ -21,6 +21,7 @@ function Profile() {
   
   const [isEditing, setIsEditing] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState(null); // 'none', 'pending', 'connected'
+  const [connectionRole, setConnectionRole] = useState(null); // 'sender', 'receiver'
   const [connectionId, setConnectionId] = useState(null);
   const [isConnecting, setIsConnecting] = useState(false);
 
@@ -61,16 +62,20 @@ function Profile() {
             .filter(Boolean);
           setConnections(users);
       } else {
-          // Check if we are connected to this user
-          const sharedConn = data.find(c => c.senderId === id || c.receiverId === id);
+          // Check if we are connected to this user using Strict Numerics from the URL match
+          const parsedId = Number(id);
+          const sharedConn = data.find(c => c.senderId === parsedId || c.receiverId === parsedId);
           if (sharedConn) {
              setConnectionId(sharedConn.id);
-             setConnectionStatus(sharedConn.status); // backend usually returns 'pending' or 'accepted'
-             // Normalize to our UI
-             if (sharedConn.status === 'accepted') setConnectionStatus('connected');
-             else setConnectionStatus('pending');
+             setConnectionStatus(sharedConn.status === 'accepted' ? 'connected' : 'pending');
+             if (sharedConn.receiverId === authUser.id) {
+                 setConnectionRole('receiver');
+             } else {
+                 setConnectionRole('sender');
+             }
           } else {
              setConnectionStatus('none');
+             setConnectionRole(null);
           }
           // Usually we can't see someone else's full network unless backend supports public grids
           setConnections([]); // Leaving empty for other users right now
@@ -86,12 +91,13 @@ function Profile() {
           if(!data) throw new Error("Fallback to derive stats");
           setStats(data);
       } catch(e) {
-          // Mocking derived numbers from dynamic length bindings if API fails
+          // Remove math.random fake states.
           setStats({
-              views: Math.floor(Math.random() * 500) + 50,
-              applied: isOwnProfile ? Math.floor(Math.random() * 20) : "Hidden",
-              saved: isOwnProfile ? Math.floor(Math.random() * 10) : "Hidden",
-              searchAppr: Math.floor(Math.random() * 100) + 10
+              views: 0,
+              applied: 0,
+              saved: 0,
+              searchAppr: 0,
+              connections: connections.length
           });
       }
   };
@@ -104,21 +110,21 @@ function Profile() {
      setIsConnecting(true);
      try {
          await sendConnectionRequest(id);
-         setConnectionStatus('pending');
+         await fetchConnectionsData(); // Source of Truth Refetch
      } catch(e) { 
          console.error(e); 
          // Mock immediate local success if strict backend fails (demo resilience UX)
          setConnectionStatus('pending'); 
-     } 
+         setConnectionRole('sender');
+     }  
      finally { setIsConnecting(false); }
   };
 
-  // Suppose backend implies pending requests RECEIVED could be updated
-  const handleAcceptConnection = async () => {
+  const handleAcceptConnection = async (status) => {
       setIsConnecting(true);
       try {
-          if(connectionId) await updateConnectionStatus(connectionId, 'accepted');
-          setConnectionStatus('connected');
+          if(connectionId) await updateConnectionStatus(connectionId, status);
+          await fetchConnectionsData(); // Source of truth refetch
       } catch(e) {
           console.error(e);
       } finally { setIsConnecting(false); }
@@ -186,17 +192,34 @@ function Profile() {
                                className="btn-secondary w-full sm:w-auto opacity-70 cursor-not-allowed border-green-500/30 text-green-400"
                                disabled
                             >
-                               ✓ Connected
+                                ✓ Connected
                             </button>
                         ) : connectionStatus === 'pending' ? (
-                             <button
-                               className="btn-secondary w-full sm:w-auto opacity-70 border-yellow-500/30 text-yellow-500"
-                               onClick={handleAcceptConnection} 
-                               disabled={isConnecting}
-                               title="Click to Accept if they requested you"
-                             >
-                               ⏳ Pending
-                             </button>
+                             connectionRole === 'receiver' ? (
+                                <div className="flex gap-2 w-full sm:w-auto">
+                                    <button
+                                        className="btn-primary flex-1 shadow-md bg-green-600 hover:bg-green-700"
+                                        onClick={() => handleAcceptConnection('accepted')}
+                                        disabled={isConnecting}
+                                    >
+                                        ✅ Accept
+                                    </button>
+                                    <button
+                                        className="btn-secondary flex-1 border-red-500/30 text-red-500 hover:bg-red-500/10"
+                                        onClick={() => handleAcceptConnection('rejected')}
+                                        disabled={isConnecting}
+                                    >
+                                        ❌ Reject
+                                    </button>
+                                </div>
+                             ) : (
+                                <button
+                                   className="btn-secondary w-full sm:w-auto opacity-70 border-yellow-500/30 text-yellow-500 cursor-default"
+                                   disabled
+                                >
+                                   ⏳ Pending
+                                </button>
+                             )
                         ) : (
                             <button 
                                className="btn-primary w-full sm:w-auto shadow-md"

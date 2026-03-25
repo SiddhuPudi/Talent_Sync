@@ -64,9 +64,17 @@ async function getConnections(userId) {
     return prisma.connection.findMany({
         where: {
             OR: [
-                { senderId: userId, status: "accepted" },
-                { receiverId: userId, status: "accepted" }
+                { senderId: userId },
+                { receiverId: userId }
             ]
+        },
+        include: {
+            sender: {
+                select: { id: true, name: true, email: true }
+            },
+            receiver: {
+                select: { id: true, name: true, email: true }
+            }
         }
     });
 }

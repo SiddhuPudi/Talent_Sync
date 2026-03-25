@@ -5,12 +5,12 @@ import { getConnections } from "../features/connection/connectionService";
 import { useAuth } from "../store/AuthContext";
 
 function Chat() {
-  const { token } = useAuth();
+  const { user } = useAuth();
   const [connections, setConnections] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
-  const userId = token ? JSON.parse(atob(token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/"))).id : null;
+  const userId = user?.id;
   const [onlineUsers, setOnlineUsers] = useState([]);
   const [typingUser, setTypingUser] = useState(null);
   const messagesEndRef = useRef(null);
@@ -31,8 +31,16 @@ function Chat() {
     const handleUserOffline = (userId) => setOnlineUsers((prev) => prev.filter((id) => id !== userId));
     const handleReceiveMessage = (msg) => {
       setMessages((prev) => {
-          if (msg.senderId === selectedUser?.id || msg.receiverId === selectedUser?.id) {
-              return [...prev, msg];
+          // Prevent optimistic echo duplicates from our own sends
+          if (msg.senderId === userId) return prev;
+          
+          // Only append if the incoming message targets the EXACT active chat window
+          if (
+              (msg.senderId === selectedUser?.id && msg.receiverId === userId) || 
+              (msg.receiverId === selectedUser?.id && msg.senderId === userId)
+          ) {
+              const exists = prev.some(m => m.id === msg.id || (m.content === msg.content && m.createdAt === msg.createdAt));
+              if(!exists) return [...prev, msg];
           }
           return prev;
       });
@@ -63,8 +71,9 @@ function Chat() {
     try {
       const data = await getConnections();
       const users = data.map((conn) => {
-        if (conn.senderId === userId) return conn.receiver;
-        return conn.sender;
+        let friend = conn.senderId === userId ? conn.receiver : conn.sender;
+        if(friend) friend.connectionStatus = conn.status;
+        return friend;
       }).filter(Boolean);
       setConnections(users);
     } catch (err) {
@@ -168,8 +177,7 @@ function Chat() {
           </div>
         ) : (
           <>
-            {/* Chat header */}
-            <div className="bg-bg p-4 border-b border-white/5 flex items-center gap-3 z-10 shadow-sm">
+             <div className="bg-bg p-4 border-b border-white/5 flex items-center gap-3 z-10 shadow-sm">
                  <div className="w-10 h-10 rounded-full bg-surface border border-white/10 flex items-center justify-center font-bold relative">
                     {selectedUser.name.charAt(0).toUpperCase()}
                     {onlineUsers.includes(selectedUser.id) && (
@@ -182,13 +190,21 @@ function Chat() {
                  </div>
             </div>
 
-            {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-4 hide-scrollbar bg-surface/50">
-              {messages.length === 0 ? (
-                  <div className="flex-1 flex items-center justify-center text-textSoft italic text-sm">
-                      Say hi to start the conversation!
-                  </div>
-              ) : (
+            {selectedUser.connectionStatus !== "accepted" ? (
+                <div className="flex-1 flex flex-col items-center justify-center text-center opacity-80 gap-3 border-dashed border-2 border-white/5 m-6 rounded-xl">
+                    <span className="text-5xl mb-2">🤝</span>
+                    <p className="text-xl font-bold text-textMain">Connect to start chatting</p>
+                    <p className="text-sm text-textSoft">You can only message accepted connections.</p>
+                </div>
+            ) : (
+                <>
+                    {/* Messages */}
+                    <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-4 hide-scrollbar bg-surface/50">
+                      {messages.length === 0 ? (
+                          <div className="flex-1 flex items-center justify-center text-textSoft italic text-sm">
+                              No messages yet. Start the conversation!
+                          </div>
+                      ) : (
                   messages.map((msg, index) => {
                     const isMe = msg.senderId === userId;
                     return (
@@ -244,6 +260,8 @@ function Chat() {
                 <svg className="w-5 h-5 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
               </button>
             </form>
+          </>
+        )}
           </>
         )}
       </div>

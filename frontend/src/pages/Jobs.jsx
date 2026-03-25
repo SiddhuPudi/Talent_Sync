@@ -5,7 +5,7 @@ import { useAuth } from "../store/AuthContext";
 import { useDebounce } from "../hooks/useDebounce";
 
 function Jobs() {
-  const { token } = useAuth();
+  const { user } = useAuth();
   const [allJobs, setAllJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [applyingId, setApplyingId] = useState(null);
@@ -24,7 +24,6 @@ function Jobs() {
   const [isPosting, setIsPosting] = useState(false);
 
   // Authentication & Verification
-  const user = token ? JSON.parse(atob(token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/"))) : null;
   // Assume backend sends isVerified. Mocking as true so feature is usable, change to test false.
   const isVerified = user?.isVerified ?? true; 
 

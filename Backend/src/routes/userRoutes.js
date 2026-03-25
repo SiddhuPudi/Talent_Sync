@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const authMiddleware = require("../middlewares/authMiddleware");
-const { getCurrentUser } = require("../controllers/userController");
+const { getCurrentUser, searchUsers, getUserById } = require("../controllers/userController");
 
 /**
  * @swagger
@@ -23,4 +23,27 @@ const { getCurrentUser } = require("../controllers/userController");
  *              description: User details
  */
 router.get("/me", authMiddleware, getCurrentUser);
+
+/**
+ * @swagger
+ * /api/users/search:
+ *  get:
+ *      summary: Search users by name query
+ *      tags: [Users]
+ *      security:
+ *          -bearerAuth: []
+ */
+router.get("/search", authMiddleware, searchUsers);
+
+/**
+ * @swagger
+ * /api/users/{id}:
+ *  get:
+ *      summary: Get user by ID explicitly
+ *      tags: [Users]
+ *      security:
+ *          -bearerAuth: []
+ */
+router.get("/:id", authMiddleware, getUserById);
+
 module.exports = router;

@@ -14,6 +14,7 @@ const io = new Server(server, {
     origin: "*",
   }
 });
+app.set("io", io);
 
 const pubClient = createClient({ url: process.env.REDIS_URL || "redis://localhost:6379" });
 const subClient = pubClient.duplicate();

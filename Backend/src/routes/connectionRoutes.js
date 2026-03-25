@@ -33,7 +33,7 @@ const { sendRequest, respondRequest, getConnections, getPendingRequests } = requ
  *          400:
  *              description: Duplicate or invalid request
  */
-router.post("/send", authMiddleware, sendRequest);
+router.post("/request", authMiddleware, sendRequest);
 
 /**
  * @swagger
@@ -79,7 +79,7 @@ router.get("/pending", authMiddleware, getPendingRequests);
  *          400:
  *              description: Invalid or unauthorized
  */
-router.put("/respond/:id", authMiddleware, respondRequest);
+router.patch("/:id", authMiddleware, respondRequest);
 
 /**
  * @swagger

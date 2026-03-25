@@ -4,8 +4,10 @@ import {
   markAsRead,
 } from "../features/notifications/notificationService";
 import socket from "../sockets/socket";
+import { useNavigate } from "react-router-dom";
 
 function Notifications() {
+  const navigate = useNavigate();
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filterMode, setFilterMode] = useState("all"); // "all" | "unread"
@@ -34,15 +36,19 @@ function Notifications() {
     }
   };
 
-  const handleRead = async (id, isRead) => {
-    if (isRead) return; 
+  const handleRead = async (id, isRead, type) => {
     try {
-      await markAsRead(id);
-      setNotifications((prev) =>
-        prev.map((n) =>
-          n.id === id ? { ...n, isRead: true } : n
-        )
-      );
+      if (!isRead) {
+          await markAsRead(id);
+          setNotifications((prev) =>
+            prev.map((n) =>
+              n.id === id ? { ...n, isRead: true } : n
+            )
+          );
+      }
+      
+      if (type && type.includes("connection")) navigate("/profile");
+      else if (type && type.includes("message")) navigate("/chat");
     } catch (err) {
       console.error(err);
     }
@@ -139,8 +145,8 @@ function Notifications() {
         <div className="flex flex-col gap-3">
           {visibleNotifications.map((n) => (
             <div
-              key={n.id}
-              onClick={() => handleRead(n.id, n.isRead)}
+                key={n.id}
+              onClick={() => handleRead(n.id, n.isRead, n.type)}
               className={`relative overflow-hidden p-5 rounded-xl border transition-all duration-300 flex gap-4 items-center group cursor-pointer ${
                 n.isRead 
                   ? "bg-surface border-white/5 hover:border-white/10 opacity-70 hover:opacity-100" 
