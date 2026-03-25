@@ -23,23 +23,34 @@ function Navbar() {
     const debouncedSearch = useDebounce(searchQuery, 300);
 
     useEffect(() => {
+        const controller = new AbortController();
+
         if (!debouncedSearch) {
             setSearchResults([]);
             return;
         }
+
         const fetchSearch = async () => {
             setIsSearching(true);
             try {
-                // Assume returns array of users matching
-                const res = await searchUsers(debouncedSearch);
+                // Pass controller.signal to the service layer 
+                const res = await searchUsers(debouncedSearch, controller.signal);
                 setSearchResults(res || []);
             } catch (e) {
-                console.error("Error searching users", e);
+                if (e.name !== "CanceledError" && e.message !== "canceled") {
+                   console.error("Error searching users", e);
+                }
             } finally {
-                setIsSearching(false);
+                if (!controller.signal.aborted) {
+                   setIsSearching(false);
+                }
             }
         };
         fetchSearch();
+
+        return () => {
+            controller.abort();
+        };
     }, [debouncedSearch]);
 
     const handleSelectUser = (id) => {

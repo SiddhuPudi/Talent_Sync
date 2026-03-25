@@ -12,7 +12,7 @@ const connectionRoutes = require("./routes/connectionRoutes");
 const chatRoutes = require("./routes/chatRoutes");
 const notificationRoutes = require("./routes/notificationRoutes");
 const errorMiddleware = require("./middlewares/errorMiddleware");
-const apiLimiter = require("./middlewares/rateLimiter");
+const { authLimiter, readLimiter, writeLimiter } = require("./middlewares/rateLimiter");
 const requestLogger = require("./middlewares/requestLogger");
 const path = require("path");
 const app = express();
@@ -20,9 +20,15 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use(requestLogger);
-app.use("/api", apiLimiter);
+// Apply limiters dynamically by HTTP method globally
+app.use("/api", (req, res, next) => {
+    if (req.method === "GET") {
+        return readLimiter(req, res, next);
+    }
+    return writeLimiter(req, res, next);
+});
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
-app.use("/api/auth", authRoutes);
+app.use("/api/auth", authLimiter, authRoutes); // Override strict rules for Auth
 app.use("/api/jobs", jobRoutes);
 app.use("/api/profile", profileRoutes);
 app.use("/api/users", userRoutes);

@@ -15,8 +15,8 @@ export const getMyConnections = async () => {
   return res.data;
 };
 
-export const searchUsers = async (query) => {
-  const res = await api.get(`/users/search?q=${query}`);
+export const searchUsers = async (query, signal) => {
+  const res = await api.get(`/users/search?q=${query}`, { signal });
   return res.data;
 };
 
