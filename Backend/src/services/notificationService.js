@@ -24,8 +24,23 @@ async function markNotificationRead(id) {
     });
 }
 
+async function getUnreadCount(userId) {
+    return prisma.notification.count({
+        where: { userId: Number(userId), isRead: false }
+    });
+}
+
+async function markAllAsRead(userId) {
+    return prisma.notification.updateMany({
+        where: { userId: Number(userId), isRead: false },
+        data: { isRead: true }
+    });
+}
+
 module.exports = {
     createNotification,
     getNotifications,
-    markNotificationRead
+    markNotificationRead,
+    getUnreadCount,
+    markAllAsRead
 }

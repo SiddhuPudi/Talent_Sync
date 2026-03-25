@@ -14,6 +14,7 @@ function Chat() {
   const [onlineUsers, setOnlineUsers] = useState([]);
   const [typingUser, setTypingUser] = useState(null);
   const messagesEndRef = useRef(null);
+  const selectedUserRef = useRef(selectedUser);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -22,6 +23,10 @@ function Chat() {
   useEffect(() => {
     scrollToBottom();
   }, [messages, typingUser]);
+
+  useEffect(() => {
+    selectedUserRef.current = selectedUser;
+  }, [selectedUser]);
 
   useEffect(() => {
     socket.emit("join", userId);
@@ -34,10 +39,11 @@ function Chat() {
           // Prevent optimistic echo duplicates from our own sends
           if (msg.senderId === userId) return prev;
           
+          const currentSelectedId = selectedUserRef.current?.id;
           // Only append if the incoming message targets the EXACT active chat window
           if (
-              (msg.senderId === selectedUser?.id && msg.receiverId === userId) || 
-              (msg.receiverId === selectedUser?.id && msg.senderId === userId)
+              (msg.senderId === currentSelectedId && msg.receiverId === userId) || 
+              (msg.receiverId === currentSelectedId && msg.senderId === userId)
           ) {
               const exists = prev.some(m => m.id === msg.id || (m.content === msg.content && m.createdAt === msg.createdAt));
               if(!exists) return [...prev, msg];
@@ -46,10 +52,10 @@ function Chat() {
       });
     };
     const handleUserTyping = ({ senderId }) => {
-      if (senderId === selectedUser?.id) setTypingUser(senderId);
+      if (senderId === selectedUserRef.current?.id) setTypingUser(senderId);
     };
     const handleUserStoppedTyping = ({ senderId }) => {
-      if (senderId === selectedUser?.id) setTypingUser(null);
+      if (senderId === selectedUserRef.current?.id) setTypingUser(null);
     };
 
     socket.on("userOnline", handleUserOnline);
@@ -65,7 +71,7 @@ function Chat() {
       socket.off("userTyping", handleUserTyping);
       socket.off("userStoppedTyping", handleUserStoppedTyping);
     };
-  }, [userId, selectedUser]);
+  }, [userId]);
 
   const fetchConnections = async () => {
     try {

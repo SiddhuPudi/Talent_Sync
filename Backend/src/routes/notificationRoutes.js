@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const authMiddleware = require("../middlewares/authMiddleware");
-const { getNotifications, markRead } = require("../controllers/notificationController");
+const { getNotifications, markRead, getUnreadCount, markAllAsRead } = require("../controllers/notificationController");
 
 /**
  * @swagger
@@ -36,6 +36,8 @@ router.get("/", authMiddleware, getNotifications);
  *          200:
  *              description: Notification updated
  */
-router.put("/read/:id", authMiddleware, markRead);
+router.patch("/read-all", authMiddleware, markAllAsRead);
+router.get("/unread-count", authMiddleware, getUnreadCount);
+router.patch("/:id/read", authMiddleware, markRead);
 
 module.exports = router;

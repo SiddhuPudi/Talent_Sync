@@ -4,32 +4,23 @@ import { useEffect, useState } from "react";
 import socket from "../sockets/socket";
 import { useDebounce } from "../hooks/useDebounce";
 import { searchUsers } from "../features/profile/profileService";
+import { useNotifications } from "../store/NotificationContext";
 
 function Navbar() {
     const { user, logout } = useAuth();
-    const location = useLocation();
     const navigate = useNavigate();
-    const [unreadCount, setUnreadCount] = useState(0);
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const { unreadCount } = useNotifications();
 
     const userInitials = user?.name ? user.name.charAt(0).toUpperCase() : "U"; 
 
-    // Search States
+    // User Search States
     const [searchQuery, setSearchQuery] = useState("");
     const [searchResults, setSearchResults] = useState([]);
     const [isSearching, setIsSearching] = useState(false);
+    
+    // Setup generic UI debounced searching
     const debouncedSearch = useDebounce(searchQuery, 300);
-
-    useEffect(() => {
-        socket.on("newNotification", () => {
-            setUnreadCount((prev) => prev + 1);
-        });
-        setTimeout(() => {
-            socket.emit("notificationsRead");
-        }, 500);
-        return () => {
-            socket.off("newNotification");
-        };
-    }, []);
 
     useEffect(() => {
         if (!debouncedSearch) {

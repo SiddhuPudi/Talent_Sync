@@ -1,50 +1,17 @@
 import { useEffect, useState } from "react";
-import {
-  getNotifications,
-  markAsRead,
-} from "../features/notifications/notificationService";
-import socket from "../sockets/socket";
+import { useNotifications } from "../store/NotificationContext";
 import { useNavigate } from "react-router-dom";
 
 function Notifications() {
   const navigate = useNavigate();
-  const [notifications, setNotifications] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { notifications, loading, markAsRead, markAllAsRead, unreadCount } = useNotifications();
   const [filterMode, setFilterMode] = useState("all"); // "all" | "unread"
   const [isMarking, setIsMarking] = useState(false);
-
-  useEffect(() => {
-    fetchNotifications();
-
-    socket.on("newNotification", (notif) => {
-      setNotifications((prev) => [notif, ...prev]);
-    });
-
-    return () => {
-      socket.off("newNotification");
-    };
-  }, []);
-
-  const fetchNotifications = async () => {
-    try {
-      const data = await getNotifications();
-      setNotifications(data);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleRead = async (id, isRead, type) => {
     try {
       if (!isRead) {
           await markAsRead(id);
-          setNotifications((prev) =>
-            prev.map((n) =>
-              n.id === id ? { ...n, isRead: true } : n
-            )
-          );
       }
       
       if (type && type.includes("connection")) navigate("/profile");
@@ -55,18 +22,13 @@ function Notifications() {
   };
 
   const handleMarkAllAsRead = async () => {
-      const unreadIds = notifications.filter(n => !n.isRead).map(n => n.id);
-      if (unreadIds.length === 0) return;
+      if (unreadCount === 0) return;
 
       setIsMarking(true);
       try {
-          // Optimistic UI update
-          setNotifications(prev => prev.map(n => ({...n, isRead: true})));
-          
-          await Promise.all(unreadIds.map(id => markAsRead(id)));
+          await markAllAsRead();
       } catch (err) {
           console.error(err);
-          // Normally we'd rollback here if a failure happened
       } finally {
           setIsMarking(false);
       }
