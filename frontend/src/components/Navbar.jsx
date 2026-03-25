@@ -36,6 +36,7 @@ function Navbar() {
                         </span>
                     )}
                 </Link>
+                <Link to="/profile">Profile</Link>
                 <button
                     onClick={logout}
                     className="bg-primary px-3 py-1 rounded text-white hover:bg-primaryHover"

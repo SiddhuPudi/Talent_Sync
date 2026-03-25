@@ -7,6 +7,7 @@ import Jobs from "./pages/Jobs";
 import Chat from "./pages/Chat";
 import Notifications from "./pages/Notifications";
 import Auth from "./pages/Auth";
+import Profile from "./pages/Profiile";
 import ProtectedRoute from "./components/ProtectedRoute";
 import PublicRoute from "./components/PublicRoute";
 
@@ -32,7 +33,7 @@ function App() {
               </ProtectedRoute>
             }
           />
-          <Route e
+          <Route
             path="/jobs" 
             element={
               <ProtectedRoute>
@@ -58,6 +59,16 @@ function App() {
               <ProtectedRoute>
                 <MainLayout>
                   <Notifications />
+                </MainLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <MainLayout>
+                  <Profile />
                 </MainLayout>
               </ProtectedRoute>
             }
