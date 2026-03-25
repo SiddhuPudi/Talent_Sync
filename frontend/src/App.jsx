@@ -73,6 +73,16 @@ function App() {
               </ProtectedRoute>
             }
           />
+          <Route
+            path="/profile/:id"
+            element={
+              <ProtectedRoute>
+                <MainLayout>
+                  <Profile />
+                </MainLayout>
+              </ProtectedRoute>
+            }
+          />
         </Routes>
     </BrowserRouter>
   );
