@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -6,6 +8,17 @@
   body {
     @apply bg-bg text-textMain;
     font-family: 'Inter', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  ::selection {
+    @apply bg-primary/40 text-textMain;
+  }
+
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255,255,255,0.1) transparent;
   }
 }
 
@@ -14,16 +27,55 @@
     @apply bg-surface p-6 rounded-2xl shadow-lg border border-white/5 transition-all duration-300;
   }
   .card-hover {
-    @apply hover:shadow-xl hover:-translate-y-1 hover:border-white/10;
+    @apply hover:shadow-card-hover hover:-translate-y-1 hover:border-white/10;
   }
   .input-field {
-    @apply w-full p-3 rounded-xl bg-bg border border-white/10 text-textMain placeholder-textSoft/50 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all duration-300;
+    @apply w-full p-3 rounded-xl bg-bg border border-white/10 text-textMain placeholder-textSoft/50 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/30 focus:shadow-glow-primary transition-all duration-300;
   }
   .btn-primary {
-    @apply bg-primary hover:bg-primaryHover text-white px-6 py-2.5 rounded-xl font-medium shadow-md hover:shadow-lg transition-all duration-300 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2;
+    @apply bg-primary hover:bg-primaryHover text-white px-6 py-2.5 rounded-xl font-semibold shadow-md hover:shadow-glow-primary transition-all duration-300 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2;
   }
   .btn-secondary {
-    @apply bg-surface hover:bg-bg text-textSoft hover:text-textMain border border-white/10 px-6 py-2.5 rounded-xl font-medium transition-all duration-300 active:scale-95 flex items-center justify-center gap-2;
+    @apply bg-surface hover:bg-bg text-textSoft hover:text-textMain border border-white/10 hover:border-white/20 px-6 py-2.5 rounded-xl font-medium transition-all duration-300 active:scale-95 flex items-center justify-center gap-2;
+  }
+  .btn-ghost {
+    @apply text-textSoft hover:text-textMain hover:bg-white/5 px-4 py-2 rounded-xl font-medium transition-all duration-200 active:scale-95;
+  }
+  .btn-icon {
+    @apply w-10 h-10 rounded-xl flex items-center justify-center text-textSoft hover:text-textMain hover:bg-white/5 transition-all duration-200 active:scale-90;
+  }
+  .badge {
+    @apply inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold;
+  }
+  .badge-primary {
+    @apply bg-primary/20 text-primaryHover border border-primary/30;
+  }
+  .badge-accent {
+    @apply bg-accent/20 text-accent border border-accent/30;
+  }
+  .badge-success {
+    @apply bg-green-500/20 text-green-400 border border-green-500/30;
+  }
+  .badge-danger {
+    @apply bg-red-500/20 text-red-400 border border-red-500/30;
+  }
+  .glass {
+    @apply bg-surface/60 backdrop-blur-xl border border-white/10;
+  }
+  .toast {
+    @apply fixed top-6 right-6 z-[200] px-5 py-3 rounded-xl shadow-2xl border animate-slide-down flex items-center gap-3 font-medium text-sm;
+  }
+  .toast-success {
+    @apply bg-green-500/20 border-green-500/30 text-green-400;
+  }
+  .toast-error {
+    @apply bg-red-500/20 border-red-500/30 text-red-400;
+  }
+  .section-title {
+    @apply text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primaryHover to-accent inline-block;
+  }
+  .gradient-text {
+    @apply text-transparent bg-clip-text bg-gradient-to-r from-primaryHover to-accent;
   }
 }
 
@@ -36,6 +88,13 @@
     scrollbar-width: none;
   }
   .skeleton {
-    @apply animate-pulse bg-white/5 rounded-xl;
+    @apply rounded-xl relative overflow-hidden bg-white/5;
+  }
+  .skeleton::after {
+    content: '';
+    @apply absolute inset-0;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.04), transparent);
+    background-size: 200% 100%;
+    animation: shimmer 2s infinite linear;
   }
 }

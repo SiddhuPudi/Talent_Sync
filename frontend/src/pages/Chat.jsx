@@ -13,6 +13,8 @@ function Chat() {
   const userId = user?.id;
   const [onlineUsers, setOnlineUsers] = useState([]);
   const [typingUser, setTypingUser] = useState(null);
+  const [showSidebar, setShowSidebar] = useState(true);
+  const [contactSearch, setContactSearch] = useState("");
   const messagesEndRef = useRef(null);
   const selectedUserRef = useRef(selectedUser);
 
@@ -36,11 +38,9 @@ function Chat() {
     const handleUserOffline = (userId) => setOnlineUsers((prev) => prev.filter((id) => id !== userId));
     const handleReceiveMessage = (msg) => {
       setMessages((prev) => {
-          // Prevent optimistic echo duplicates from our own sends
           if (msg.senderId === userId) return prev;
           
           const currentSelectedId = selectedUserRef.current?.id;
-          // Only append if the incoming message targets the EXACT active chat window
           if (
               (msg.senderId === currentSelectedId && msg.receiverId === userId) || 
               (msg.receiverId === currentSelectedId && msg.senderId === userId)
@@ -99,6 +99,15 @@ function Chat() {
   const handleSelectUser = (user) => {
     setSelectedUser(user);
     fetchMessages(user);
+    // Hide sidebar on mobile after selection
+    if (window.innerWidth < 768) {
+      setShowSidebar(false);
+    }
+  };
+
+  const handleBackToList = () => {
+    setShowSidebar(true);
+    setSelectedUser(null);
   };
 
   const sendMessage = (e) => {
@@ -140,33 +149,73 @@ function Chat() {
       return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
+  const filteredConnections = connections.filter(c => 
+    contactSearch ? c.name.toLowerCase().includes(contactSearch.toLowerCase()) : true
+  );
+
+  const onlineCount = connections.filter(c => onlineUsers.includes(c.id)).length;
+
   return (
-    <div className="flex h-[80vh] gap-6 animate-fade-in font-sans">
-      {/* LEFT: USERS */}
-      <div className="w-1/3 md:w-1/4 card p-0 overflow-hidden flex flex-col bg-surface border border-white/5 shadow-lg">
-        <h2 className="text-xl font-bold bg-bg p-4 border-b border-white/5">Connections</h2>
-        <div className="flex-1 overflow-y-auto hide-scrollbar p-2">
-            {connections.length === 0 ? (
-                 <p className="text-textSoft p-4 text-center text-sm">No connections yet.</p>
+    <div className="flex h-[calc(100vh-8rem)] gap-0 md:gap-5 animate-fade-in font-sans -mx-4 md:mx-0">
+      
+      {/* LEFT: CONTACTS SIDEBAR */}
+      <div className={`${showSidebar ? 'flex' : 'hidden'} md:flex w-full md:w-80 lg:w-96 card p-0 overflow-hidden flex-col bg-surface border border-white/5 shadow-lg shrink-0 rounded-none md:rounded-2xl`}>
+        {/* Sidebar Header */}
+        <div className="p-4 border-b border-white/5 bg-bg/50">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-lg font-bold text-textMain">Messages</h2>
+            <span className="badge badge-success text-[10px]">
+              {onlineCount} online
+            </span>
+          </div>
+          <div className="relative">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-textSoft/40 text-xs">🔍</span>
+            <input
+              type="text"
+              placeholder="Search contacts..."
+              className="input-field pl-8 py-2 text-sm bg-bg/50 border-white/5"
+              value={contactSearch}
+              onChange={e => setContactSearch(e.target.value)}
+            />
+          </div>
+        </div>
+
+        {/* Contact List */}
+        <div className="flex-1 overflow-y-auto hide-scrollbar">
+            {filteredConnections.length === 0 ? (
+                 <div className="flex flex-col items-center justify-center py-12 text-center px-4">
+                   <span className="text-4xl opacity-40 mb-3">💬</span>
+                   <p className="text-textSoft text-sm font-medium">
+                     {contactSearch ? "No contacts match your search" : "No connections yet"}
+                   </p>
+                   <p className="text-textSoft/50 text-xs mt-1">Connect with professionals to start chatting</p>
+                 </div>
             ) : (
-                connections.map((user) => (
+                filteredConnections.map((user) => (
                   <div
                     key={user.id}
                     onClick={() => handleSelectUser(user)}
-                    className={`p-3 mb-1 rounded-xl cursor-pointer flex justify-between items-center transition-all ${
+                    className={`px-4 py-3.5 cursor-pointer flex items-center gap-3 transition-all border-b border-white/[0.03] last:border-0 ${
                       selectedUser?.id === user.id
-                        ? "bg-primary text-white shadow-md"
-                        : "hover:bg-bg text-textMain"
+                        ? "bg-primary/10 border-l-2 border-l-primary"
+                        : "hover:bg-white/[0.03]"
                     }`}
                   >
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-bg flex items-center justify-center font-bold text-sm relative border border-white/10">
+                    <div className="relative shrink-0">
+                        <div className={`w-11 h-11 rounded-full flex items-center justify-center font-bold text-sm border transition-colors ${
+                          selectedUser?.id === user.id 
+                            ? "bg-primary text-white border-primary" 
+                            : "bg-bg text-textMain border-white/10"
+                        }`}>
                             {user.name.charAt(0).toUpperCase()}
-                            {onlineUsers.includes(user.id) && (
-                                <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-surface shadow-[0_0_8px_rgba(34,197,94,0.6)]"></span>
-                            )}
                         </div>
-                        <span className="font-medium truncate">{user.name}</span>
+                        {onlineUsers.includes(user.id) && (
+                            <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-green-500 rounded-full border-2 border-surface shadow-glow-green"></span>
+                        )}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <span className={`font-semibold truncate block text-sm ${selectedUser?.id === user.id ? "text-textMain" : "text-textMain"}`}>{user.name}</span>
+                      <span className="text-xs text-textSoft/60">{onlineUsers.includes(user.id) ? "Online" : "Offline"}</span>
                     </div>
                   </div>
                 ))
@@ -174,41 +223,59 @@ function Chat() {
         </div>
       </div>
 
-      {/* RIGHT: CHAT */}
-      <div className="flex-1 flex flex-col card p-0 overflow-hidden bg-surface border border-white/5 shadow-lg relative">
+      {/* RIGHT: CHAT AREA */}
+      <div className={`${!showSidebar || selectedUser ? 'flex' : 'hidden'} md:flex flex-1 flex-col card p-0 overflow-hidden bg-surface border border-white/5 shadow-lg relative rounded-none md:rounded-2xl`}>
         {!selectedUser ? (
-          <div className="flex-1 flex flex-col items-center justify-center opacity-60">
-              <span className="text-6xl mb-4">💬</span>
-              <p className="text-lg text-textSoft">Select a user to start chatting</p>
+          <div className="flex-1 flex flex-col items-center justify-center opacity-60 px-4">
+              <div className="w-20 h-20 rounded-3xl bg-primary/10 border border-primary/20 flex items-center justify-center text-4xl mb-5">
+                💬
+              </div>
+              <h3 className="text-xl font-bold text-textMain mb-2">Start a Conversation</h3>
+              <p className="text-textSoft text-sm text-center max-w-xs">Select a contact from the sidebar to begin messaging</p>
           </div>
         ) : (
           <>
-             <div className="bg-bg p-4 border-b border-white/5 flex items-center gap-3 z-10 shadow-sm">
-                 <div className="w-10 h-10 rounded-full bg-surface border border-white/10 flex items-center justify-center font-bold relative">
-                    {selectedUser.name.charAt(0).toUpperCase()}
+             {/* Chat Header */}
+             <div className="bg-bg/50 backdrop-blur-sm p-4 border-b border-white/5 flex items-center gap-3 z-10 shadow-sm">
+                 {/* Back button on mobile */}
+                 <button 
+                   onClick={handleBackToList}
+                   className="md:hidden btn-icon shrink-0 -ml-1"
+                 >
+                   ←
+                 </button>
+                 <div className="relative shrink-0">
+                    <div className="w-10 h-10 rounded-full bg-surface border border-white/10 flex items-center justify-center font-bold">
+                       {selectedUser.name.charAt(0).toUpperCase()}
+                    </div>
                     {onlineUsers.includes(selectedUser.id) && (
-                         <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-surface shadow-[0_0_8px_rgba(34,197,94,0.6)]"></span>
+                         <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full border-2 border-bg shadow-glow-green"></span>
                      )}
                  </div>
-                 <div>
-                    <h2 className="font-bold text-textMain">{selectedUser.name}</h2>
-                    <p className="text-xs text-textSoft">{onlineUsers.includes(selectedUser.id) ? "Online" : "Offline"}</p>
+                 <div className="min-w-0 flex-1">
+                    <h2 className="font-bold text-textMain text-sm truncate">{selectedUser.name}</h2>
+                    <p className={`text-xs font-medium ${onlineUsers.includes(selectedUser.id) ? "text-green-400" : "text-textSoft/50"}`}>
+                      {onlineUsers.includes(selectedUser.id) ? "● Online" : "Offline"}
+                    </p>
                  </div>
             </div>
 
             {selectedUser.connectionStatus !== "accepted" ? (
-                <div className="flex-1 flex flex-col items-center justify-center text-center opacity-80 gap-3 border-dashed border-2 border-white/5 m-6 rounded-xl">
-                    <span className="text-5xl mb-2">🤝</span>
-                    <p className="text-xl font-bold text-textMain">Connect to start chatting</p>
-                    <p className="text-sm text-textSoft">You can only message accepted connections.</p>
+                <div className="flex-1 flex flex-col items-center justify-center text-center gap-3 p-6">
+                    <div className="w-16 h-16 rounded-2xl bg-accent/10 border border-accent/20 flex items-center justify-center text-3xl">
+                      🤝
+                    </div>
+                    <p className="text-lg font-bold text-textMain mt-2">Connect to start chatting</p>
+                    <p className="text-sm text-textSoft max-w-xs">You can only message accepted connections.</p>
                 </div>
             ) : (
                 <>
                     {/* Messages */}
-                    <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-4 hide-scrollbar bg-surface/50">
+                    <div className="flex-1 overflow-y-auto p-4 md:p-6 flex flex-col gap-3 hide-scrollbar">
                       {messages.length === 0 ? (
-                          <div className="flex-1 flex items-center justify-center text-textSoft italic text-sm">
-                              No messages yet. Start the conversation!
+                          <div className="flex-1 flex flex-col items-center justify-center">
+                            <span className="text-4xl opacity-30 mb-2">💬</span>
+                            <p className="text-textSoft/60 text-sm">No messages yet. Say hello!</p>
                           </div>
                       ) : (
                   messages.map((msg, index) => {
@@ -216,20 +283,20 @@ function Chat() {
                     return (
                       <div
                         key={index}
-                        className={`flex flex-col max-w-[75%] animate-slide-up ${
+                        className={`flex flex-col max-w-[80%] md:max-w-[70%] ${
                           isMe ? "self-end items-end" : "self-start items-start"
                         }`}
                       >
                         <div
-                          className={`px-4 py-2.5 shadow-md ${
+                          className={`px-4 py-2.5 shadow-sm ${
                             isMe
-                              ? "bg-primary text-white rounded-2xl rounded-tr-sm"
-                              : "bg-bg text-textMain rounded-2xl rounded-tl-sm border border-white/5"
+                              ? "bg-primary text-white rounded-2xl rounded-br-md"
+                              : "bg-bg text-textMain rounded-2xl rounded-bl-md border border-white/5"
                           }`}
                         >
-                          <p className="leading-relaxed whitespace-pre-wrap break-words">{msg.content}</p>
+                          <p className="leading-relaxed whitespace-pre-wrap break-words text-sm">{msg.content}</p>
                         </div>
-                        <span className="text-[10px] text-textSoft/60 mt-1 px-1">
+                        <span className="text-[10px] text-textSoft/40 mt-1 px-1">
                             {formatTime(msg.createdAt)}
                         </span>
                       </div>
@@ -237,13 +304,13 @@ function Chat() {
                   })
               )}
               
-              {/*Typing indicator*/}
+              {/* Typing indicator */}
               {typingUser && (
-                <div className="self-start items-start max-w-[75%] animate-fade-in flex flex-col mt-2">
-                   <div className="bg-bg text-textSoft rounded-2xl rounded-tl-sm px-4 py-3 shadow-md flex gap-1 border border-white/5">
-                      <div className="w-2 h-2 bg-textSoft/50 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-                      <div className="w-2 h-2 bg-textSoft/50 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-                      <div className="w-2 h-2 bg-textSoft/50 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                <div className="self-start max-w-[70%] animate-fade-in">
+                   <div className="bg-bg text-textSoft rounded-2xl rounded-bl-md px-4 py-3 shadow-sm flex gap-1.5 border border-white/5 items-center">
+                      <div className="w-2 h-2 bg-textSoft/40 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                      <div className="w-2 h-2 bg-textSoft/40 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                      <div className="w-2 h-2 bg-textSoft/40 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
                    </div>
                 </div>
               )}
@@ -251,19 +318,19 @@ function Chat() {
             </div>
 
             {/* Input */}
-            <form onSubmit={sendMessage} className="p-4 bg-bg border-t border-white/5 flex gap-3 items-center">
+            <form onSubmit={sendMessage} className="p-3 md:p-4 bg-bg/50 backdrop-blur-sm border-t border-white/5 flex gap-3 items-center">
               <input
                 value={input}
                 onChange={handleInputChange}
                 placeholder="Type your message..."
-                className="input-field rounded-full px-6 py-3 border-none bg-surface shadow-inner"
+                className="input-field rounded-full px-5 py-2.5 border-white/5 bg-surface text-sm flex-1"
               />
               <button
                 type="submit"
                 disabled={!input.trim()}
-                className="w-12 h-12 rounded-full bg-primary flex items-center justify-center text-white hover:bg-primaryHover disabled:opacity-50 transition-all hover:scale-105 active:scale-95 shadow-md shrink-0"
+                className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-white hover:bg-primaryHover disabled:opacity-30 transition-all hover:scale-105 active:scale-95 shadow-md shrink-0"
               >
-                <svg className="w-5 h-5 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
+                <svg className="w-4 h-4 ml-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
               </button>
             </form>
           </>

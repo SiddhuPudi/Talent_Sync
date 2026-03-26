@@ -10,11 +10,15 @@ function Jobs() {
   const [loading, setLoading] = useState(true);
   const [applyingId, setApplyingId] = useState(null);
   const [appliedJobs, setAppliedJobs] = useState([]);
+  const [successJobId, setSuccessJobId] = useState(null);
+
+  // Toast state
+  const [toast, setToast] = useState(null);
 
   // Search and Filter States
   const [searchTerm, setSearchTerm] = useState("");
   const [locationFilter, setLocationFilter] = useState("");
-  const [sortBy, setSortBy] = useState("newest"); // "newest" or "oldest"
+  const [sortBy, setSortBy] = useState("newest");
   
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
 
@@ -23,9 +27,12 @@ function Jobs() {
   const [jobForm, setJobForm] = useState({ title: "", company: "", location: "", description: "" });
   const [isPosting, setIsPosting] = useState(false);
 
-  // Authentication & Verification
-  // Assume backend sends isVerified. Mocking as true so feature is usable, change to test false.
   const isVerified = user?.isVerified ?? true; 
+
+  const showToast = (message, type = "success") => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3000);
+  };
 
   useEffect(() => {
     fetchJobs();
@@ -58,9 +65,12 @@ function Jobs() {
       setApplyingId(jobId);
       await applyToJob(jobId);
       setAppliedJobs((prev) => [...prev, jobId]);
+      setSuccessJobId(jobId);
+      showToast("Application submitted successfully!", "success");
+      setTimeout(() => setSuccessJobId(null), 2000);
     } catch (error) {
       console.error(error);
-      alert("Error applying to job");
+      showToast("Failed to apply. Please try again.", "error");
     } finally {
       setApplyingId(null);
     }
@@ -69,7 +79,8 @@ function Jobs() {
   const handlePostJob = async (e) => {
     e.preventDefault();
     if (!jobForm.title || !jobForm.company || !jobForm.location || !jobForm.description) {
-      return alert("Please fill all required fields.");
+      showToast("Please fill all required fields.", "error");
+      return;
     }
     setIsPosting(true);
     try {
@@ -77,20 +88,17 @@ function Jobs() {
       setAllJobs((prev) => [newJob, ...prev]);
       setIsModalOpen(false);
       setJobForm({ title: "", company: "", location: "", description: "" });
-      alert("Job posted successfully!");
+      showToast("Job posted successfully!", "success");
     } catch (err) {
       console.error(err);
-      alert("Error posting job");
+      showToast("Error posting job. Please try again.", "error");
     } finally {
       setIsPosting(false);
     }
   };
 
-  // Derived state: Filtered and Sorted Jobs
   const filteredJobs = useMemo(() => {
     let result = [...allJobs];
-
-    // Search filter
     if (debouncedSearchTerm) {
       const term = debouncedSearchTerm.toLowerCase();
       result = result.filter(
@@ -100,27 +108,20 @@ function Jobs() {
           job.location?.toLowerCase().includes(term)
       );
     }
-
-    // Location filter
     if (locationFilter) {
       result = result.filter((job) =>
         job.location?.toLowerCase().includes(locationFilter.toLowerCase())
       );
     }
-
-    // Sorting (assuming jobs have createdAt or sorting by id/array index for mockup)
     result.sort((a, b) => {
-      // Mock newest vs oldest using ID if createdAt isn't standard
       const dateA = a.createdAt ? new Date(a.createdAt).getTime() : a.id;
       const dateB = b.createdAt ? new Date(b.createdAt).getTime() : b.id;
       if (sortBy === "newest") return dateB - dateA;
       return dateA - dateB;
     });
-
     return result;
   }, [allJobs, debouncedSearchTerm, locationFilter, sortBy]);
 
-  // Extract unique locations for the filter
   const uniqueLocations = useMemo(() => {
     const locs = allJobs.map(j => j.location).filter(Boolean);
     return [...new Set(locs)];
@@ -129,9 +130,26 @@ function Jobs() {
   return (
     <div className="flex flex-col gap-6 animate-fade-in font-sans pb-10">
       
+      {/* Toast */}
+      {toast && (
+        <div className={`fixed top-4 right-4 z-[200] px-5 py-3 rounded-xl shadow-2xl border animate-slide-down flex items-center gap-3 font-medium text-sm backdrop-blur-xl ${
+          toast.type === "success"
+            ? "bg-green-500/20 border-green-500/30 text-green-400"
+            : "bg-red-500/20 border-red-500/30 text-red-400"
+        }`}>
+          <span className="text-lg">{toast.type === "success" ? "✅" : "❌"}</span>
+          <span>{toast.message}</span>
+        </div>
+      )}
+
       {/* Header & Post Job */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pl-1">
-          <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primaryHover to-accent inline-block">Explore Jobs</h1>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold gradient-text inline-block">Explore Jobs</h1>
+            <p className="text-textSoft text-sm mt-1">
+              {loading ? "" : `${filteredJobs.length} ${filteredJobs.length === 1 ? 'position' : 'positions'} available`}
+            </p>
+          </div>
           
           <div className="relative group inline-block w-full md:w-auto">
             <button 
@@ -142,28 +160,28 @@ function Jobs() {
                 <span className="text-lg leading-none">+</span> Post a Job
             </button>
             {!isVerified && (
-                <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 hidden group-hover:block w-48 bg-surface border border-white/10 text-white text-xs text-center p-2 rounded-lg shadow-xl z-50">
+                <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 hidden group-hover:block w-48 glass text-white text-xs text-center p-2 rounded-lg shadow-xl z-50">
                     Only verified users can post jobs.
                 </div>
             )}
           </div>
       </div>
 
-      {/* Global Search & Filters */}
-      <div className="card sticky top-[72px] z-40 p-4 md:p-6 shadow-xl border-white/5 flex flex-col md:flex-row gap-4 items-center">
-          <div className="relative flex-1 w-full">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-textSoft">🔍</span>
+      {/* Search & Filters */}
+      <div className="card sticky top-[60px] z-40 p-4 md:p-5 shadow-xl border-white/5 flex flex-col md:flex-row gap-3 items-stretch md:items-center">
+          <div className="relative flex-1">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-textSoft/60">🔍</span>
               <input 
                  type="text" 
                  placeholder="Search by title, company, or location..." 
-                 className="input-field pl-10 bg-bg"
+                 className="input-field pl-10 bg-bg/50"
                  value={searchTerm}
                  onChange={(e) => setSearchTerm(e.target.value)}
               />
           </div>
-          <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
+          <div className="flex gap-3 w-full md:w-auto">
               <select 
-                 className="input-field bg-bg sm:w-40 appearance-none cursor-pointer"
+                 className="input-field bg-bg/50 flex-1 md:w-40 appearance-none cursor-pointer"
                  value={locationFilter}
                  onChange={(e) => setLocationFilter(e.target.value)}
               >
@@ -173,7 +191,7 @@ function Jobs() {
                  ))}
               </select>
               <select 
-                 className="input-field bg-bg sm:w-40 appearance-none cursor-pointer"
+                 className="input-field bg-bg/50 flex-1 md:w-40 appearance-none cursor-pointer"
                  value={sortBy}
                  onChange={(e) => setSortBy(e.target.value)}
               >
@@ -185,7 +203,7 @@ function Jobs() {
 
       {/* Job Listings */}
       {loading ? (
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mt-2">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
            {[1, 2, 3, 4, 5, 6].map((i) => (
                <div key={i} className="card flex flex-col gap-4">
                    <div className="skeleton h-6 w-3/4"></div>
@@ -197,23 +215,24 @@ function Jobs() {
            ))}
         </div>
       ) : filteredJobs.length === 0 ? (
-        <div className="card text-center py-20 flex flex-col items-center justify-center gap-4 border-dashed border-2 border-white/10 bg-transparent mt-2">
+        <div className="card text-center py-20 flex flex-col items-center justify-center gap-4 border-dashed border-2 border-white/10 bg-transparent">
             <span className="text-6xl opacity-40 drop-shadow-lg">📡</span>
             <h3 className="text-2xl font-bold text-textMain mt-2">No results found</h3>
             <p className="text-textSoft text-lg">Try adjusting your filters or search query.</p>
             {(searchTerm || locationFilter) && (
                 <button 
                   onClick={() => { setSearchTerm(""); setLocationFilter(""); }}
-                  className="mt-2 text-primaryHover hover:underline font-medium"
+                  className="btn-secondary mt-2"
                 >
                   Clear all filters
                 </button>
             )}
         </div>
       ) : (
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mt-2">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
           {filteredJobs.map((job) => {
             const isApplied = appliedJobs.includes(job.id);
+            const justApplied = successJobId === job.id;
 
             return (
               <div
@@ -221,14 +240,12 @@ function Jobs() {
                 className="card card-hover flex flex-col justify-between group"
               >
                 <div>
-                  <div className="flex justify-between items-start mb-3">
-                      <h2 className="text-xl font-bold text-textMain leading-tight group-hover:text-primaryHover transition-colors">
-                        {job.title}
-                      </h2>
-                  </div>
+                  <h2 className="text-xl font-bold text-textMain leading-tight group-hover:text-primaryHover transition-colors mb-3">
+                    {job.title}
+                  </h2>
 
                   <div className="flex flex-wrap items-center gap-2 mb-4">
-                      <span className="bg-primary/10 border border-primary/20 text-textSoft px-3 py-1 rounded-full text-sm font-medium">
+                      <span className="badge badge-primary">
                           {job.company}
                       </span>
                       <span className="text-sm text-textSoft flex items-center gap-1 opacity-80">
@@ -244,19 +261,19 @@ function Jobs() {
                 <button
                   onClick={() => handleApply(job.id)}
                   disabled={isApplied || applyingId === job.id}
-                  className={`w-full py-2.5 rounded-xl font-medium transition-all duration-300 flex items-center justify-center gap-2 ${
+                  className={`w-full py-2.5 rounded-xl font-semibold transition-all duration-300 flex items-center justify-center gap-2 ${
                     isApplied
                       ? "bg-surface/50 border border-white/5 text-textSoft cursor-not-allowed"
                       : applyingId === job.id 
                       ? "bg-primary/70 text-white cursor-wait"
-                      : "bg-primary hover:bg-primaryHover text-white shadow-md hover:shadow-lg active:scale-95"
+                      : "bg-primary hover:bg-primaryHover text-white shadow-md hover:shadow-glow-primary active:scale-95"
                   }`}
                 >
                   {isApplied ? (
-                    <>✅ Applied</>
+                    <><span className={justApplied ? "animate-bounce" : ""}>✅</span> Applied</>
                   ) : applyingId === job.id ? (
                     <>
-                       <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                       <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                        Applying...
                     </>
                   ) : (
@@ -276,15 +293,16 @@ function Jobs() {
               <div className="card w-full max-w-lg relative z-10 animate-slide-up bg-surface border-white/10 shadow-2xl">
                   <button 
                       onClick={() => !isPosting && setIsModalOpen(false)}
-                      className="absolute top-4 right-4 text-textSoft hover:text-white transition-colors"
+                      className="absolute top-4 right-4 btn-icon"
                   >
                       ✕
                   </button>
-                  <h2 className="text-2xl font-bold text-textMain mb-6">Post a New Job</h2>
+                  <h2 className="text-2xl font-bold text-textMain mb-1">Post a New Job</h2>
+                  <p className="text-textSoft text-sm mb-6">Fill in the details to list a new position.</p>
                   
                   <form onSubmit={handlePostJob} className="flex flex-col gap-4">
                       <div>
-                          <label className="block text-sm font-medium text-textSoft mb-1">Job Title *</label>
+                          <label className="block text-sm font-medium text-textSoft mb-1.5">Job Title *</label>
                           <input 
                              type="text" 
                              required
@@ -294,9 +312,9 @@ function Jobs() {
                              onChange={e => setJobForm({...jobForm, title: e.target.value})}
                           />
                       </div>
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                          <div>
-                            <label className="block text-sm font-medium text-textSoft mb-1">Company *</label>
+                            <label className="block text-sm font-medium text-textSoft mb-1.5">Company *</label>
                             <input 
                                type="text"
                                required 
@@ -307,7 +325,7 @@ function Jobs() {
                             />
                          </div>
                          <div>
-                            <label className="block text-sm font-medium text-textSoft mb-1">Location *</label>
+                            <label className="block text-sm font-medium text-textSoft mb-1.5">Location *</label>
                             <input 
                                type="text"
                                required 
@@ -319,7 +337,7 @@ function Jobs() {
                          </div>
                       </div>
                       <div>
-                          <label className="block text-sm font-medium text-textSoft mb-1">Description *</label>
+                          <label className="block text-sm font-medium text-textSoft mb-1.5">Description *</label>
                           <textarea 
                              required
                              className="input-field min-h-[120px] resize-y" 
@@ -343,7 +361,12 @@ function Jobs() {
                              disabled={isPosting}
                              className="btn-primary w-full"
                           >
-                             {isPosting ? 'Posting...' : 'Post Job'}
+                             {isPosting ? (
+                               <span className="flex items-center gap-2">
+                                 <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                                 Posting...
+                               </span>
+                             ) : 'Post Job'}
                           </button>
                       </div>
                   </form>

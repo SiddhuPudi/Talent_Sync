@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 function Notifications() {
   const navigate = useNavigate();
   const { notifications, loading, markAsRead, markAllAsRead, unreadCount } = useNotifications();
-  const [filterMode, setFilterMode] = useState("all"); // "all" | "unread"
+  const [filterMode, setFilterMode] = useState("all");
   const [isMarking, setIsMarking] = useState(false);
 
   const handleRead = async (id, isRead, type) => {
@@ -23,7 +23,6 @@ function Notifications() {
 
   const handleMarkAllAsRead = async () => {
       if (unreadCount === 0) return;
-
       setIsMarking(true);
       try {
           await markAllAsRead();
@@ -42,6 +41,22 @@ function Notifications() {
       return "🔔";
   };
 
+  const formatRelativeTime = (dateString) => {
+      if (!dateString) return "";
+      const date = new Date(dateString);
+      const now = new Date();
+      const diffMs = now - date;
+      const diffMins = Math.floor(diffMs / 60000);
+      const diffHrs = Math.floor(diffMs / 3600000);
+      const diffDays = Math.floor(diffMs / 86400000);
+
+      if (diffMins < 1) return "Just now";
+      if (diffMins < 60) return `${diffMins}m ago`;
+      if (diffHrs < 24) return `${diffHrs}h ago`;
+      if (diffDays < 7) return `${diffDays}d ago`;
+      return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+  };
+
   const visibleNotifications = notifications.filter(n => 
       filterMode === "unread" ? !n.isRead : true
   );
@@ -51,23 +66,29 @@ function Notifications() {
   return (
     <div className="flex flex-col gap-6 max-w-4xl mx-auto animate-fade-in font-sans pb-10">
 
+      {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primaryHover to-accent inline-block pb-1">Notifications</h1>
+          <div>
+            <h1 className="text-3xl font-bold gradient-text inline-block pb-1">Notifications</h1>
+            <p className="text-textSoft text-sm mt-1">
+              {unreadCount > 0 ? `${unreadCount} unread` : "You're all caught up!"}
+            </p>
+          </div>
           
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
               <div className="flex p-1 bg-surface border border-white/5 rounded-xl">
                   <button 
                       onClick={() => setFilterMode("all")}
-                      className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-colors ${filterMode === "all" ? "bg-primary text-white shadow" : "text-textSoft hover:text-textMain"}`}
+                      className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 ${filterMode === "all" ? "bg-primary text-white shadow-sm" : "text-textSoft hover:text-textMain"}`}
                   >
                       All
                   </button>
                   <button 
                       onClick={() => setFilterMode("unread")}
-                      className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-colors ${filterMode === "unread" ? "bg-primary text-white shadow" : "text-textSoft hover:text-textMain"}`}
+                      className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 flex items-center gap-1.5 ${filterMode === "unread" ? "bg-primary text-white shadow-sm" : "text-textSoft hover:text-textMain"}`}
                   >
-                      Unread 
-                      {hasUnread && filterMode !== "unread" && <span className="ml-1.5 w-2 h-2 bg-red-500 rounded-full inline-block mb-[1px]"></span>}
+                      Unread
+                      {hasUnread && filterMode !== "unread" && <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse-soft"></span>}
                   </button>
               </div>
 
@@ -75,14 +96,17 @@ function Notifications() {
                   <button 
                       onClick={handleMarkAllAsRead} 
                       disabled={isMarking}
-                      className="btn-secondary text-sm px-4 py-2 hover:bg-primary/20 hover:text-primaryHover border-primary/30"
+                      className="btn-ghost text-sm text-primaryHover hover:bg-primary/10"
                   >
-                      {isMarking ? '⏳' : '✓ Mark all as read'}
+                      {isMarking ? (
+                        <div className="w-4 h-4 border-2 border-primary/30 border-t-primaryHover rounded-full animate-spin"></div>
+                      ) : '✓ Mark all read'}
                   </button>
               )}
           </div>
       </div>
 
+      {/* Content */}
       {loading ? (
           <div className="flex flex-col gap-3">
               {[1, 2, 3, 4].map((i) => (
@@ -96,51 +120,61 @@ function Notifications() {
               ))}
           </div>
       ) : visibleNotifications.length === 0 ? (
-        <div className="card text-center py-24 flex flex-col items-center justify-center gap-4 bg-transparent border-dashed border-2 border-white/10">
-           <span className="text-6xl opacity-40 drop-shadow-lg">📭</span>
-           <h3 className="text-2xl font-bold text-textMain mt-2">
+        <div className="card text-center py-20 flex flex-col items-center justify-center gap-3 bg-transparent border-dashed border-2 border-white/10">
+           <div className="w-16 h-16 rounded-2xl bg-surface border border-white/5 flex items-center justify-center text-3xl">
+             📭
+           </div>
+           <h3 className="text-xl font-bold text-textMain mt-2">
                {filterMode === "unread" ? "No unread notifications" : "You're all caught up!"}
            </h3>
-           <p className="text-textSoft text-lg">We'll let you know when something happens.</p>
+           <p className="text-textSoft">We'll let you know when something happens.</p>
         </div>
       ) : (
-        <div className="flex flex-col gap-3">
-          {visibleNotifications.map((n) => (
+        <div className="flex flex-col gap-2">
+          {visibleNotifications.map((n, index) => (
             <div
                 key={n.id}
               onClick={() => handleRead(n.id, n.isRead, n.type)}
-              className={`relative overflow-hidden p-5 rounded-xl border transition-all duration-300 flex gap-4 items-center group cursor-pointer ${
+              className={`relative overflow-hidden p-4 md:p-5 rounded-xl border transition-all duration-300 flex gap-4 items-center group cursor-pointer ${
                 n.isRead 
-                  ? "bg-surface border-white/5 hover:border-white/10 opacity-70 hover:opacity-100" 
-                  : "bg-surface border-primary/30 shadow-md transform hover:-translate-y-1 hover:shadow-lg"
+                  ? "bg-surface/50 border-white/5 hover:border-white/10 hover:bg-surface" 
+                  : "bg-surface border-primary/20 shadow-md hover:-translate-y-0.5 hover:shadow-lg hover:border-primary/40"
               }`}
+              style={{ animationDelay: `${index * 50}ms` }}
             >
               {!n.isRead && (
-                  <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-primary"></div>
+                  <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-primary to-primaryHover"></div>
               )}
               
-              <div className={`w-12 h-12 rounded-full flex items-center justify-center text-xl shadow-inner shrink-0 ${
-                  n.isRead ? "bg-bg text-textSoft" : "bg-primary/20 text-textMain"
+              <div className={`w-11 h-11 rounded-xl flex items-center justify-center text-xl shrink-0 transition-colors ${
+                  n.isRead ? "bg-bg/50 text-textSoft" : "bg-primary/15 text-textMain"
               }`}>
                   {getIconForType(n.type)}
               </div>
 
               <div className="flex-1 min-w-0">
-                <p className={`text-base truncate ${n.isRead ? "text-textSoft" : "text-textMain font-medium"}`}>
+                <p className={`text-sm leading-relaxed ${n.isRead ? "text-textSoft" : "text-textMain font-medium"}`}>
                     {n.message}
                 </p>
-                <div className="flex items-center gap-2 mt-1">
-                    <span className={`text-xs uppercase tracking-wider font-semibold ${
-                        n.isRead ? "text-textSoft/50" : "text-primary/80"
+                <div className="flex items-center gap-2 mt-1.5">
+                    <span className={`text-xs font-medium ${
+                        n.isRead ? "text-textSoft/40" : "text-primaryHover/70"
                     }`}>
                         {n.type || "Notification"}
                     </span>
+                    <span className="text-textSoft/20">·</span>
+                    <span className="text-xs text-textSoft/40">
+                      {formatRelativeTime(n.createdAt)}
+                    </span>
                     {!n.isRead && (
-                        <span className="text-[10px] bg-accent/20 text-accent px-2 py-0.5 rounded-full font-bold">New</span>
+                        <span className="badge badge-accent text-[10px] ml-1">New</span>
                     )}
                 </div>
               </div>
 
+              <span className="text-textSoft/20 group-hover:text-textSoft/40 transition-colors text-sm shrink-0">
+                →
+              </span>
             </div>
           ))}
         </div>
