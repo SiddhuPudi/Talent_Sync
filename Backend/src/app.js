@@ -20,15 +20,19 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use(requestLogger);
-// Apply limiters dynamically by HTTP method globally
+
 app.use("/api", (req, res, next) => {
+
+    if (req.path.startsWith("/auth")) {
+        return next();
+    }
     if (req.method === "GET") {
         return readLimiter(req, res, next);
     }
     return writeLimiter(req, res, next);
 });
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
-app.use("/api/auth", authLimiter, authRoutes); // Override strict rules for Auth
+app.use("/api/auth", authLimiter, authRoutes);
 app.use("/api/jobs", jobRoutes);
 app.use("/api/profile", profileRoutes);
 app.use("/api/users", userRoutes);
