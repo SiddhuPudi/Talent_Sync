@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "http://localhost:3000/api",
+  baseURL: import.meta.env.VITE_API_URL || "http://localhost:3000/api",
 });
 
 api.interceptors.request.use((config) => {
@@ -15,7 +15,6 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
-    // Implement smart deduplication and exponential backoff for 429 bursts
     if (error.response && error.response.status === 429) {
       const config = error.config;
       config._retryCount = config._retryCount || 0;
