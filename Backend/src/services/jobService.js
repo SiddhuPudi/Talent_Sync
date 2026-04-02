@@ -79,9 +79,11 @@ async function getAllJobs(filters) {
         };
     }
     const cacheKey = `jobs:${JSON.stringify(filters)}`;
-    const cached = await redis.get(cacheKey);
-    if (cached) {
-        return JSON.parse(cached);
+    if (redis) {
+        const cached = await redis.get(cacheKey);
+        if (cached) {
+            return JSON.parse(cached);
+        }
     }
     const jobs = await prisma.job.findMany({
         where,
@@ -104,7 +106,9 @@ async function getAllJobs(filters) {
         limit,
         jobs
     };
-    await redis.setEx(cacheKey, 60, JSON.stringify(result));
+    if (redis) {
+        await redis.setEx(cacheKey, 60, JSON.stringify(result));
+    }
     return result;
 }
 

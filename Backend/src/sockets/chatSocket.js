@@ -2,24 +2,33 @@ const prisma = require("../config/prisma");
 const redis = require("../config/redis");
 const notificationService = require("../services/notificationService");
 const { sendNotificationEvent } = require("../services/kafkaProducer");
+const onlineUsers = new Map();
 
 module.exports = (io) => {
     io.on("connection", (socket) => {
         console.log("User connected: ", socket.id);
         socket.on("join", async (userId) => {
-            await redis.set(`online:${userId}`, socket.id);
+            if (redis) {
+                await redis.set(`online:${userId}`, socket.id);
+            } else {
+                onlineUsers.set(userId, socket.id);
+            }
             io.emit("userOnline", userId);
         });
         socket.on("typing", async ({ senderId, receiverId }) => {
-            const receiverSocketId = await redis.get(`online:${receiverId}`);
-            if (receiverSocketId) {
-                io.to(receiverSocketId).emit("userTyping", { senderId });
+            let receiverSocketId;
+            if (redis) {
+                receiverSocketId = await redis.get(`online:${receiverId}`);
+            } else {
+                receiverSocketId = onlineUsers.get(receiverId);
             }
         });
         socket.on("stopTyping", async ({ senderId, receiverId }) => {
-            const receiverSocketId = await redis.get(`online:${receiverId}`);
-            if (receiverSocketId) {
-                io.to(receiverSocketId).emit("userStoppedTyping", { senderId });
+            let receiverSocketId;
+            if (redis) {
+                receiverSocketId = await redis.get(`online:${receiverId}`);
+            } else {
+                receiverSocketId = onlineUsers.get(receiverId);
             }
         });
         socket.on("sendMessage", async (data) => {
@@ -52,7 +61,12 @@ module.exports = (io) => {
                     type: "message",
                     message: `New message from user ${senderId}`
                 });
-                const receiverSocketId = await redis.get(`online:${receiverId}`);
+                let receiverSocketId;
+                if (redis) {
+                    receiverSocketId = await redis.get(`online:${receiverId}`);
+                } else {
+                    receiverSocketId = onlineUsers.get(receiverId);
+                }
                 if (receiverSocketId) {
                     io.to(receiverSocketId).emit("receiveMessage", message);
                     io.to(receiverSocketId).emit("newNotification", {
@@ -68,14 +82,24 @@ module.exports = (io) => {
             }
         });
         socket.on("disconnect", async () => {
-            const keys = await redis.keys("online:*");
-            for (let key of keys) {
-                const socketId = await redis.get(key);
-                if (socketId === socket.id) {
-                    const userId = key.split(":")[1];
-                    await redis.del(key);
-                    io.emit("userOffline", userId);
-                    break;
+            if (redis) {
+                const keys = await redis.keys("online:*");
+                for (let key of keys) {
+                    const socketId = await redis.get(key);
+                    if (socketId === socket.id) {
+                        const userId = key.split(":")[1];
+                        await redis.del(key);
+                        io.emit("userOffline", userId);
+                        break;
+                    }
+                }
+            } else {
+                for (let [userId, socketId] of onlineUsers.entries()) {
+                    if (socketId === socket.id) {
+                        onlineUsers.delete(userId);
+                        io.emit("userOffline", userId);
+                        break;
+                    }
                 }
             }
         });
