@@ -9,7 +9,7 @@ const options = {
             description: "API documentation for Talent Sync backend"
         },
         servers: [
-            { url: process.env.NODE_ENV === "production" ? "https://talent-sync-pq7j.onrender.com" : "http://localhost:3000" }
+            { url: "https://talent-sync-pq7j.onrender.com" }
         ],
         components: {
             securitySchemes: {
