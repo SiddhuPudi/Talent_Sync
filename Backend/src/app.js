@@ -17,12 +17,29 @@ const requestLogger = require("./middlewares/requestLogger");
 const path = require("path");
 const app = express();
 
-app.use(cors());
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://talent-sync-green.vercel.app"
+];
+app.use(cors({
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("CORS not allowed"));
+    }
+  },
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
+  credentials: true
+}));
+app.options("*", cors({
+  origin: allowedOrigins,
+  credentials: true
+}));
 app.use(express.json());
 app.use(requestLogger);
 
 app.use("/api", (req, res, next) => {
-
     if (req.path.startsWith("/auth")) {
         return next();
     }
