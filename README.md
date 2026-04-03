@@ -4,24 +4,34 @@
 
 ---
 
+## 🌏 Live Demo
+
+**🌐 Frontend:** https://talent-sync-green.vercel.app/
+
+**⚙️ Backend API:** https://talent-sync-pq7j.onrender.com/
+
+---
+
 ## 🌟 Features
 
 ### 🔐 Authentication
 - JWT-based authentication with secure token handling
-- Protected & public route guards
 - Persistent login sessions across page refreshes
+- Form validation (email + password rules)
+- OTP-based 2 step verification
 
 ### 👤 Profile & Connections
-- User profiles with editable info
-- Send / Accept / Reject connection requests
-- Real-time connection status updates
-- Profile stats derived from live data
+ - Dynamic user profiles with real-time stats
+ - Send / Accept / Reject connection requests
+ - Persistent connection states (no reset on refresh)
+ - Navigate to other users’ profiles
+ -	Connection-based chat access
 
 ### 💼 Jobs System
 - Post jobs (verified users only)
-- Apply to jobs with real-time feedback
+- Job search (title, company, location)
+- Apply via professional form (resume + message)
 - Prevent duplicate applications
-- Search & filter by title, company, and location
 
 ### 💬 Real-Time Chat
 - Socket.IO-based instant messaging
@@ -34,6 +44,7 @@
 - Mark as read / Mark all as read
 - Persistent unread count badge
 - Relative timestamps (e.g., "5m ago")
+- Connection + job + chat notifications
 
 ---
 
@@ -43,13 +54,15 @@
 |-------|-------------|
 | **Frontend** | React 19, Vite 8, Tailwind CSS 3 |
 | **Backend** | Node.js, Express 5, Prisma ORM |
-| **Database** | PostgreSQL |
-| **Real-time** | Socket.IO with Redis Adapter |
-| **Caching** | Redis |
-| **Event Streaming** | Apache Kafka (KafkaJS) |
+| **Database** | PostgreSQL (Neon) |
+| **Real-time** | Socket.IO |
 | **Containerization** | Docker & Docker Compose |
 | **API Docs** | Swagger (swagger-ui-express) |
+| **Email Service** | Nodemailer |
+| **Deployment** | Render(Backend), Vercel(Frontend) |
 | **Logging** | Winston |
+| **Caching** | Redis |
+| **Event Streaming** | Apache Kafka (KafkaJS) |
 
 ---
 
@@ -70,6 +83,7 @@ Talent_Sync/
 │   │   ├── utils/           # Helpers & utilities
 │   │   └── app.js           # Express app setup
 │   ├── server.js            # Entry point (HTTP + Socket.IO + Kafka)
+│   ├── README.md
 │   └── Dockerfile
 │
 ├── frontend/
@@ -99,7 +113,9 @@ Talent_Sync/
 
 - **Node.js** v18+
 - **PostgreSQL** running locally or via Docker
-- **Redis** running locally or via Docker
+
+  #### Optional
+- **Redis** running locally or via Docker 
 - **Kafka** (optional — for event streaming)
 
 ---
@@ -107,7 +123,7 @@ Talent_Sync/
 ### 1️⃣ Clone the Repository
 
 ```bash
-git clone <your-repo-url>
+git clone https://github.com/SiddhuPudi/Talent_Sync
 cd Talent_Sync
 ```
 
@@ -129,6 +145,7 @@ This starts PostgreSQL, Redis, Kafka, the backend, and serves the frontend.
 ```bash
 cd Backend
 npm install
+npx prisma generate
 npx prisma migrate dev
 npm run dev
 ```
@@ -160,6 +177,8 @@ npm run dev
 PORT=3000
 DATABASE_URL=postgresql://user:password@localhost:5432/talent_sync
 JWT_SECRET=your_jwt_secret
+
+# Optional:
 REDIS_URL=redis://localhost:6379
 KAFKA_BROKER=localhost:9092
 ```
@@ -188,12 +207,12 @@ The frontend coordinates with exponential backoff retry (2s → 4s → 8s) and 3
 
 ## 🧠 Key Highlights
 
-- **Real-time architecture** — Socket.IO with Redis pub/sub adapter for horizontal scaling
-- **Event-driven processing** — Kafka for decoupled notification and activity streaming
-- **Production-grade auth** — Synchronous token restoration prevents route flicker on refresh
-- **Smart rate limiting** — Per-route Redis stores with user+IP keying; no false 429 errors
-- **Modern dark UI** — Custom Tailwind design system with glassmorphism, micro-animations, and shimmer skeletons
-- **Mobile-first responsive** — All pages work on mobile, tablet, and desktop
+- **Real-time chat system using Socket.IO**
+- **Backend-driven UI (no fake data)**
+- **Production-grade authentication handling**
+- **Persistent state across refresh**
+- **Clean and responsive UI design**
+- **Modular and scalable architecture**
 
 ---
 
@@ -202,7 +221,7 @@ The frontend coordinates with exponential backoff retry (2s → 4s → 8s) and 3
 - [ ] Pagination & infinite scroll for jobs and notifications
 - [ ] File uploads via S3 / Cloudinary for profile avatars
 - [ ] Advanced search filters (salary range, job type, experience)
-- [ ] Email verification & password reset flow
+- [ ] Password reset flow
 - [ ] Mobile app (React Native)
 - [ ] CI/CD pipeline with GitHub Actions
 
@@ -216,7 +235,3 @@ The frontend coordinates with exponential backoff retry (2s → 4s → 8s) and 3
 - **U. Karthikeya**
 
 ---
-
-<div align="center">
-  <sub>Built with ❤️ using React, Node.js, and modern web technologies</sub>
-</div>

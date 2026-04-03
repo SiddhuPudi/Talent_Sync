@@ -1,20 +1,28 @@
 # 🚀 Talent Sync — Backend
 
-A production-ready backend system for a professional networking and job platform, built with scalable architecture, real-time communication, and event-driven design.
+A production-ready backend system for a professional networking and job platform, designed with scalable architecture, real-time communication, and clean modular structure.
 
 ---
 
 ## 📌 Overview
 
 Talent Sync backend powers:
-- 🔐 Authentication & Authorization (JWT)
+- 🔐 Authentication & Authorization (JWT + OTP)
 - 👤 User Profiles
 - 🤝 Connection System (like LinkedIn)
 - 💼 Job Posting & Applications
 - 💬 Real-time Chat (Socket.IO)
-- 🔔 Notification System (Kafka + DB)
-- ⚡ Caching & Scaling (Redis)
+- 🔔 Notification System (DB + real-time)
 - 🐳 Containerized Infrastructure (Docker)
+- ✉️ Email Notifications (Nodemailer)
+- ⚡ Caching & Scaling (Redis)
+
+---
+
+## 🌍 Live API
+
+ - **⚙️ Base URL:** https://talent-sync-pq7j.onrender.com
+ - **📄 Swagger Docs:** https://talent-sync-pq7j.onrender.com/api-docs
 
 ---
 
@@ -25,12 +33,19 @@ Client
   ↓
 Backend (Node.js + Express)
   ↓
-Redis (Cache + Socket Scaling)
-  ↓
-Kafka (Event Queue)
-  ↓
 PostgreSQL (Database)
 ```
+
+### 🔄 Optional (Scalable Setup)
+
+```bash
+Backend
+  ↓
+Redis (Caching + Socket scaling)
+  ↓
+Kafka (Event-driven processing)
+```
+> ⚠️ Redis & Kafka are implemented but optional in deployment for simplicity and cost efficiency.
 
 ---
 
@@ -39,8 +54,9 @@ PostgreSQL (Database)
 | Layer | Technology |
 | --- | --- |
 | Backend | Node.js, Express |
-| Database | PostgreSQL, Prisma ORM |
+| Database | PostgreSQL (Neon), Prisma ORM |
 | Real-time | Socket.IO |
+| Email | Nodemailer(Gmail SMTP) |
 | Cache | Redis |
 | Messaging Queue | Apache Kafka |
 | Containerization | Docker, Docker Compose |
@@ -54,13 +70,14 @@ PostgreSQL (Database)
 backend/
 │
 ├── src/
-│   ├── config/          # DB, Redis, Kafka configs
+│   ├── config/          # DB, Redis, Kafka, Swagger configs
 │   ├── controllers/     # Route handlers
 │   ├── services/        # Business logic
 │   ├── routes/          # API routes
 │   ├── middlewares/     # Auth, error handling
 │   ├── sockets/         # Real-time logic
-│   └── utils/           # Helpers
+│   ├── utils/           # Helpers
+│   └── app.js
 │
 ├── prisma/              # Database schema
 ├── uploads/             # File uploads
@@ -80,6 +97,12 @@ Create a `.env` file:
 PORT=3000
 JWT_SECRET=your_secret
 DATABASE_URL=postgresql://postgres:postgres@postgres:5432/talent_sync
+
+# Email (for OTP + notifications):
+EMAIL_USER=your_email@gmail.com
+EMAIL_PASS=your_app_password
+
+# Optional:
 REDIS_URL=redis://redis:6379
 KAFKA_BROKER=kafka:9093
 ```
@@ -100,6 +123,7 @@ docker-compose up --build
 
 ```bash
 npm install
+npx prisma generate
 npx prisma migrate dev
 npm run dev
 ```
@@ -118,14 +142,23 @@ http://localhost:3000/api-docs
 
 ## 🔐 Authentication
 - JWT-based authentication
+- Secure password hashing (bcrypt)
+- Input validation (email + password rules)
+- OTP-based verification (email)
 - Protected routes via middleware
 - Role-based authorization (extendable)
+
+## 🔑 OTP Flow
+- User logs in / registers
+- OTP sent via email
+- User verifies OTP
+- Access granted
 
 ---
 
 ## 💬 Real-Time Chat
 - Built using Socket.IO
-- Supports:
+- Features:
   - Live messaging
   - Typing indicators
   - Online/offline status
@@ -134,13 +167,25 @@ http://localhost:3000/api-docs
 ---
 
 ## 🔔 Notification System
-- Event-driven using Kafka
+- Stored in database
 - Supports:
   - Messages
   - Connection requests
   - Job updates
   - Application status
-- Stored in database + real-time push
+- Stored in database + real-time push via sockets
+
+---
+
+## 📧 Email System
+- Built using Nodemailer
+- Reusable email utility
+- Triggers:
+  - Connection request
+  - Connection accepted
+  - Job posted
+  - OTP verification
+
 
 ---
 
@@ -152,6 +197,7 @@ http://localhost:3000/api-docs
 ---
 
 ## 🧠 Scalability Features
+- Modular service-based architecture
 - Horizontal scaling ready
 - Redis for shared state
 - Kafka for async processing
@@ -160,13 +206,13 @@ http://localhost:3000/api-docs
 ---
 
 ## 🗄️ Database
-- PostgreSQL with Prisma ORM
+- PostgreSQL (Neon cloud DB)
 - Optimized queries
-- Indexed fields for performance
+- Prisma ORM
 
 ---
 
-## 🧪 Key API Modules
+## 🧪 Core API Modules
 - Auth
 - Users / Profiles
 - Jobs
@@ -179,6 +225,7 @@ http://localhost:3000/api-docs
 
 ## 🛡️ Security
 - JWT authentication
+- Password hashing (bcrypt)
 - Input validation
 - Rate limiting
 - Protected routes
@@ -196,8 +243,8 @@ http://localhost:3000/api-docs
 ## 📈 Future Improvements
 - Kubernetes deployment
 - CI/CD pipelines
-- Advanced search (Elasticsearch)
-- Push notifications (FCM)
+- Password reset flow
+- File storage (S3/Cloudinary)
 
 ---
 
@@ -213,9 +260,11 @@ Built as a full-stack scalable system to demonstrate:
 
 ## ⭐ Why This Project Stands Out
 - Real-time communication (chat + notifications)
-- Event-driven architecture (Kafka)
-- Scalable design (Redis + Docker)
-- Clean service-based architecture
+- OTP-based authentication
+- Email integration (Nodemailer)
+- Clean architecture
+- Deployment-ready backend
+- Scalable design with optional Redis/Kafka
 - Production-ready setup
 
 ---

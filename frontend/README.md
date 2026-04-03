@@ -1,19 +1,45 @@
 # 🎨 Talent Sync Frontend
 
-Frontend for **Talent Sync** — a platform built using React and Tailwind CSS with a premium dark-themed UI.
+Frontend for **Talent Sync** — a platform built using React, Vite, and Tailwind CSS with a modern, responsive dark-themed UI.
 
 ---
 
 ## 🚀 Features
 
-- Responsive dark theme UI with glassmorphism effects
-- Real-time chat with typing indicators & online status
-- Job listings with search, filters & one-click apply
-- Live notifications with relative timestamps
-- User profiles with connection management
-- Debounced search with AbortController
-- Persistent auth across page refreshes
-- Smooth micro-animations & skeleton loading states
+### 🎯 Core Functionality
+ - Job listings with search, filters, and salary display
+ - Job Details Modal (LinkedIn-style full view)
+ - Apply via professional form (resume + message)
+ - Prevent duplicate job applications
+
+### 💬 Real-Time Features
+ - Instant chat with Socket.IO
+ - Typing indicators
+ - Online/offline user status
+ - Real-time notifications
+
+ ### 🔔 Notifications System
+ - Live notifications with relative timestamps (e.g., “5m ago”)
+ - Mark as read / mark all as read
+ - Persistent unread badge (backend-driven)
+
+### 👤 Profile & Connections
+ - Dynamic profile with real-time stats
+ - View other user profiles
+ - Send / Accept / Reject connection requests
+ - Connection-based chat access
+
+### 🔐 Authentication UX
+ - JWT-based login & register
+ - Persistent sessions across refresh
+ - Form validation (email + password rules)
+ - OTP verification flow
+
+### 📱 UI/UX Enhancements
+ - Fully mobile-responsive design
+ - Sticky navbar with blur effect
+ - Smooth scrolling (no layout breaking)
+ - Responsive dark theme UI with glassmorphism effects
 
 ---
 
@@ -24,8 +50,8 @@ Frontend for **Talent Sync** — a platform built using React and Tailwind CSS w
 | **React 19** | UI framework |
 | **Vite 8** | Build tool & dev server |
 | **Tailwind CSS 3** | Utility-first styling |
-| **Axios** | HTTP client with retry interceptor |
-| **Socket.IO Client** | Real-time messaging & notifications |
+| **Axios** | API communication with interceptors |
+| **Socket.IO Client** | Real-time chat & notifications |
 
 ---
 
@@ -74,20 +100,20 @@ VITE_API_URL=http://localhost:3000
 
 ```
 src/
-├── components/      # Navbar, Toast, ProtectedRoute, PublicRoute
+├── components/        # Navbar, Toast, ProtectedRoute, PublicRoute
 ├── features/
-│   ├── auth/        # Login & register services
-│   ├── chat/        # (reserved)
-│   ├── connection/  # Connection request services
-│   ├── jobs/        # Job CRUD services
-│   └── profile/     # Profile & connections services
-├── hooks/           # useDebounce
-├── layouts/         # MainLayout with footer
-├── pages/           # Home, Jobs, Chat, Auth, Notifications, Profile
-├── services/        # Axios API client, application service
-├── sockets/         # Socket.IO client instance
-├── store/           # AuthContext, NotificationContext
-└── utils/           # Helpers & utilities
+│   ├── auth/          # Login & register services
+│   ├── connection/    # Connection APIs
+│   ├── jobs/          # Job CRUD services
+│   ├── notifications/ # Notification services
+│   └── profile/       # Profile & connections
+├── hooks/             # useDebounce
+├── layouts/           # MainLayout with footer
+├── pages/             # Home, Jobs, Chat, Auth, Notifications, Profile
+├── services/          # Axios API client, application service
+├── sockets/           # Socket.IO client instance
+├── store/             # AuthContext, NotificationContext
+└── utils/             # Helpers & utilities
 ```
 
 ---
@@ -104,10 +130,19 @@ src/
 
 ---
 
+## ⚡ Performance Optimizations
+
+ - Debounced API calls (search inputs)
+ - Request cancellation using AbortController
+ - Exponential backoff retry on 429 errors (2s → 4s → 8s)
+ - Minimal re-renders using optimized state handling
+
+---
+
 ## 📌 Notes
 
 - Uses **JWT authentication** stored in localStorage with synchronous restoration
 - Integrates with backend REST APIs via Axios interceptors
-- **Rate limit coordination** — exponential backoff retry (2s → 4s → 8s) on 429 responses
-- Uses **Socket.IO** for real-time chat, typing indicators, and notification delivery
+- Uses **Socket.IO** for real-time updates
 - Search inputs are **debounced** (300ms) to prevent API spam
+- Backend-driven UI (no fake data)
