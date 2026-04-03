@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const { registerUser, loginUser } = require("../controllers/authController");
+const { registerUser, loginUser, verifyOtp } = require("../controllers/authController");
 
 /**
  * @swagger
@@ -58,5 +58,29 @@ router.post("/register", registerUser);
  *              description: Login successful
  */
 router.post("/login", loginUser);
+
+/**
+ * @swagger
+ * /api/auth/verify-otp:
+ *  post:
+ *      summary: Verify the OTP sent to email and receive JWT
+ *      tags: [Auth]
+ *      requestBody:
+ *          required: true
+ *          content:
+ *              application/json:
+ *                  schema:
+ *                      type: object
+ *                      required: [email, otp]
+ *                      properties:
+ *                          email:
+ *                              type: string
+ *                          otp:
+ *                              type: string
+ *      responses:
+ *          200:
+ *              description: OTP Verified, login successful
+ */
+router.post("/verify-otp", verifyOtp);
 
 module.exports = router;
