@@ -4,9 +4,14 @@
 @tailwind components;
 @tailwind utilities;
 
+html, body, #root {
+  height: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
 @layer base {
   html {
-    overflow-x: hidden;
     -webkit-text-size-adjust: 100%;
   }
 
@@ -15,8 +20,6 @@
     font-family: 'Inter', system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    overflow-x: hidden;
-    overscroll-behavior: none;
   }
 
   ::selection {

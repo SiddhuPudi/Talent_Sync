@@ -2,7 +2,7 @@ import Navbar from "../components/Navbar";
 
 function MainLayout({ children }) {
     return (
-        <div className="min-h-screen flex flex-col bg-bg text-textMain font-sans overflow-x-hidden selection:bg-primary/30">
+        <div className="min-h-screen flex flex-col bg-bg text-textMain font-sans selection:bg-primary/30">
             <Navbar />
             <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 md:px-8 py-6 sm:py-8 lg:py-10 animate-fade-in">
                 {children}

@@ -51,7 +51,7 @@ function JobDetailModal({ job, isApplied, onClose, onOpenApply }) {
         className="absolute inset-0 bg-black/70 backdrop-blur-sm"
         onClick={onClose}
       />
-      <div className="relative z-10 w-full sm:max-w-2xl bg-surface border border-white/10 rounded-t-3xl sm:rounded-3xl shadow-2xl animate-slide-up max-h-[92vh] sm:max-h-[85vh] flex flex-col">
+      <div className="relative z-10 w-full sm:max-w-2xl bg-surface border border-white/10 rounded-t-3xl sm:rounded-3xl shadow-2xl animate-slide-up max-h-[90vh] flex flex-col overflow-hidden">
         {/* Header */}
         <div className="flex items-start justify-between p-4 sm:p-6 pb-3 sm:pb-4 border-b border-white/5 shrink-0">
           <div className="flex-1 pr-3 sm:pr-4 min-w-0">
@@ -80,9 +80,8 @@ function JobDetailModal({ job, isApplied, onClose, onOpenApply }) {
             ✕
           </button>
         </div>
-
         {/* Scrollable body */}
-        <div className="overflow-y-auto overscroll-contain flex-1 p-4 sm:p-6 space-y-4 sm:space-y-6">
+        <div className="overflow-y-auto overscroll-contain flex-1 p-4 sm:p-6 space-y-4 sm:space-y-6 hide-scrollbar">
           <div className="grid grid-cols-2 gap-2 sm:gap-3">
             <div className="bg-bg/60 rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-white/5">
               <p className="text-[10px] sm:text-xs text-textSoft/60 uppercase tracking-widest mb-1 font-medium">
@@ -110,10 +109,9 @@ function JobDetailModal({ job, isApplied, onClose, onOpenApply }) {
             </div>
           </div>
         </div>
-
         {/* Footer */}
         <div className="p-4 sm:p-6 pt-3 sm:pt-4 border-t border-white/5 shrink-0 flex gap-2 sm:gap-3">
-          <button onClick={onClose} className="btn-secondary flex-1 text-sm sm:text-base">
+          <button onClick={onClose} className="btn-secondary flex-1 text-sm sm:text-base py-2.5 sm:py-2">
             Close
           </button>
           {isApplied ? (
@@ -126,7 +124,7 @@ function JobDetailModal({ job, isApplied, onClose, onOpenApply }) {
           ) : (
             <button
               onClick={() => { onClose(); onOpenApply(job); }}
-              className="btn-primary flex-1 text-sm sm:text-base"
+              className="btn-primary flex-1 text-sm sm:text-base py-2.5 sm:py-2"
             >
               Apply Now 🚀
             </button>
@@ -197,7 +195,7 @@ function ApplyModal({ job, onClose, onSuccess }) {
         className="absolute inset-0 bg-black/75 backdrop-blur-sm"
         onClick={() => !isSubmitting && onClose()}
       />
-      <div className="relative z-10 w-full sm:max-w-lg bg-surface border border-white/10 rounded-t-3xl sm:rounded-3xl shadow-2xl animate-slide-up max-h-[92vh] sm:max-h-[90vh] flex flex-col">
+      <div className="relative z-10 w-full sm:max-w-lg bg-surface border border-white/10 rounded-t-3xl sm:rounded-3xl shadow-2xl animate-slide-up max-h-[90vh] flex flex-col overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between p-4 sm:p-6 pb-3 sm:pb-4 border-b border-white/5 shrink-0">
           <div className="min-w-0 flex-1 pr-2">
@@ -214,9 +212,8 @@ function ApplyModal({ job, onClose, onSuccess }) {
             ✕
           </button>
         </div>
-
         {/* Scrollable body */}
-        <div className="flex-1 overflow-y-auto overscroll-contain p-4 sm:p-6">
+        <div className="flex-1 overflow-y-auto overscroll-contain p-4 sm:p-6 hide-scrollbar">
           {isDone ? (
             <div className="flex flex-col items-center justify-center py-6 sm:py-8 gap-4 animate-scale-in">
               <div className="text-5xl sm:text-6xl animate-bounce">🎉</div>
@@ -281,19 +278,19 @@ function ApplyModal({ job, onClose, onSuccess }) {
                   placeholder="Tell the recruiter why you're a great fit..."
                 />
               </div>
-              <div className="flex gap-2 sm:gap-3 mt-2">
+              <div className="flex gap-2 sm:gap-3 mt-2 shrink-0 pb-2">
                 <button
                   type="button"
                   onClick={onClose}
                   disabled={isSubmitting}
-                  className="btn-secondary flex-1 text-sm sm:text-base"
+                  className="btn-secondary flex-1 text-sm sm:text-base py-2.5 sm:py-2"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting || !form.resume.trim()}
-                  className="btn-primary flex-1 text-sm sm:text-base"
+                  className="btn-primary flex-1 text-sm sm:text-base py-2.5 sm:py-2"
                 >
                   {isSubmitting ? (
                     <span className="flex items-center gap-2">
@@ -377,39 +374,30 @@ function Jobs() {
   const [applyingId, setApplyingId] = useState(null);
   const [appliedJobs, setAppliedJobs] = useState([]);
   const [successJobId, setSuccessJobId] = useState(null);
-
   // Toast
   const [toast, setToast] = useState(null);
-
   // Search & Filter
   const [searchTerm, setSearchTerm] = useState("");
   const [locationFilter, setLocationFilter] = useState("");
   const [sortBy, setSortBy] = useState("newest");
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
-
   // Post Job Modal
   const [isPostModalOpen, setIsPostModalOpen] = useState(false);
   const [jobForm, setJobForm] = useState({ title: "", company: "", location: "", description: "", salary: "" });
   const [isPosting, setIsPosting] = useState(false);
-
   // Job Detail Modal
   const [selectedJob, setSelectedJob] = useState(null);
-
   // Apply Form Modal
   const [applyJob, setApplyJob] = useState(null);
-
   const isVerified = user?.isVerified ?? true;
-
   const showToast = useCallback((message, type = "success") => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 3500);
   }, []);
-
   useEffect(() => {
     fetchJobs();
     fetchApplications();
   }, []);
-
   const fetchJobs = async () => {
     try {
       const data = await getJobs();
@@ -420,7 +408,6 @@ function Jobs() {
       setLoading(false);
     }
   };
-
   const fetchApplications = async () => {
     try {
       const data = await getMyApplications();
@@ -429,7 +416,6 @@ function Jobs() {
       // silent
     }
   };
-
   // Called by ApplyModal on success
   const handleApplySuccess = useCallback((jobId) => {
     setAppliedJobs((prev) => [...prev, jobId]);
@@ -437,7 +423,6 @@ function Jobs() {
     showToast("🎉 Application submitted successfully!", "success");
     setTimeout(() => setSuccessJobId(null), 2500);
   }, [showToast]);
-
   const handlePostJob = async (e) => {
     e.preventDefault();
     if (!jobForm.title || !jobForm.company || !jobForm.location || !jobForm.description) {
@@ -461,7 +446,6 @@ function Jobs() {
       setIsPosting(false);
     }
   };
-
   const filteredJobs = useMemo(() => {
     let result = [...allJobs];
     if (debouncedSearchTerm) {
@@ -485,7 +469,6 @@ function Jobs() {
     });
     return result;
   }, [allJobs, debouncedSearchTerm, locationFilter, sortBy]);
-
   const uniqueLocations = useMemo(() => {
     const locs = allJobs.map((j) => j.location).filter(Boolean);
     return [...new Set(locs)];
@@ -517,7 +500,6 @@ function Jobs() {
           )}
         </div>
       </div>
-
       {/* Search & Filters */}
       <div className="card sticky top-[68px] z-40 p-3 sm:p-5 shadow-xl border-white/5 flex flex-col md:flex-row gap-2 sm:gap-3 items-stretch md:items-center bg-surface/90 backdrop-blur-md">
         <div className="relative flex-1">
@@ -551,7 +533,6 @@ function Jobs() {
           </select>
         </div>
       </div>
-
       {/* Job Listings */}
       {loading ? (
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -595,7 +576,6 @@ function Jobs() {
           ))}
         </div>
       )}
-
       {/* ── Job Detail Modal ── */}
       {selectedJob && (
         <JobDetailModal
@@ -605,7 +585,6 @@ function Jobs() {
           onOpenApply={(job) => setApplyJob(job)}
         />
       )}
-
       {/* ── Apply Form Modal ── */}
       {applyJob && (
         <ApplyModal
@@ -614,7 +593,6 @@ function Jobs() {
           onSuccess={handleApplySuccess}
         />
       )}
-
       {/* ── Post Job Modal ── */}
       {isPostModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4">
@@ -622,7 +600,7 @@ function Jobs() {
             className="absolute inset-0 bg-black/70 backdrop-blur-sm"
             onClick={() => !isPosting && setIsPostModalOpen(false)}
           />
-          <div className="card w-full sm:max-w-lg relative z-10 animate-slide-up bg-surface border-white/10 shadow-2xl rounded-t-3xl sm:rounded-3xl max-h-[92vh] flex flex-col">
+          <div className="card w-full sm:max-w-lg relative z-10 animate-slide-up bg-surface border-white/10 shadow-2xl rounded-t-3xl sm:rounded-3xl max-h-[90vh] flex flex-col overflow-hidden">
             <div className="flex items-center justify-between p-4 sm:p-6 pb-3 sm:pb-4 border-b border-white/5 shrink-0">
               <div>
                 <h2 className="text-xl sm:text-2xl font-bold text-textMain">Post a New Job</h2>
@@ -635,8 +613,7 @@ function Jobs() {
                 ✕
               </button>
             </div>
-
-            <form onSubmit={handlePostJob} className="flex-1 overflow-y-auto overscroll-contain p-4 sm:p-6 flex flex-col gap-4">
+            <form onSubmit={handlePostJob} className="flex-1 overflow-y-auto overscroll-contain p-4 sm:p-6 flex flex-col gap-4 hide-scrollbar">
               <div>
                 <label className="block text-sm font-medium text-textSoft mb-1.5">Job Title *</label>
                 <input
@@ -699,17 +676,16 @@ function Jobs() {
                   onChange={(e) => setJobForm({ ...jobForm, description: e.target.value })}
                 />
               </div>
-
               <div className="flex gap-3 mt-4 shrink-0 pb-2">
                 <button
                   type="button"
                   onClick={() => setIsPostModalOpen(false)}
                   disabled={isPosting}
-                  className="btn-secondary w-full"
+                  className="btn-secondary w-full py-2.5 sm:py-2"
                 >
                   Cancel
                 </button>
-                <button type="submit" disabled={isPosting} className="btn-primary w-full">
+                <button type="submit" disabled={isPosting} className="btn-primary w-full py-2.5 sm:py-2">
                   {isPosting ? (
                     <span className="flex items-center gap-2 text-sm sm:text-base">
                       <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />

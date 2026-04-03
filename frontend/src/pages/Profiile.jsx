@@ -307,7 +307,7 @@ function Profile() {
       {isEditing && (
         <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4">
           <div className="absolute inset-0 bg-bg/80 backdrop-blur-sm" onClick={() => setIsEditing(false)}></div>
-          <div className="card w-full sm:max-w-md relative z-10 animate-slide-up bg-surface border-white/10 shadow-2xl rounded-t-3xl sm:rounded-3xl max-h-[92vh] flex flex-col">
+          <div className="card w-full sm:max-w-md relative z-10 animate-slide-up bg-surface border-white/10 shadow-2xl rounded-t-3xl sm:rounded-3xl max-h-[90vh] flex flex-col overflow-hidden">
             <div className="flex items-center justify-between p-4 sm:p-6 pb-3 sm:pb-4 border-b border-white/5 shrink-0">
               <div>
                 <h2 className="text-xl sm:text-2xl font-bold text-textMain">Edit Profile</h2>
@@ -320,7 +320,7 @@ function Profile() {
                 ✕
               </button>
             </div>
-            <div className="flex-1 overflow-y-auto overscroll-contain p-4 sm:p-6 flex flex-col gap-4">
+            <div className="flex-1 overflow-y-auto overscroll-contain p-4 sm:p-6 flex flex-col gap-4 hide-scrollbar">
               <div>
                 <label className="block text-sm font-medium text-textSoft mb-1.5">Full Name</label>
                 <input type="text" className="input-field" defaultValue={profileUser.name} />
