@@ -1,6 +1,6 @@
 const express = require("express");
 const cors = require("cors");
-require("dotenv").config({ path: process.env.NODE_ENV === "production" ? ".env" : ".env.local" });
+require("dotenv").config({ path: ".env" });
 const swaggerUi = require("swagger-ui-express");
 const swaggerSpec = require("./config/swagger");
 const authRoutes = require("./routes/authRoutes");
@@ -32,7 +32,7 @@ app.use(cors({
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
   credentials: true
 }));
-app.options("*", cors({
+app.options("/*splat", cors({
   origin: allowedOrigins,
   credentials: true
 }));
