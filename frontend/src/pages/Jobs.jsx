@@ -46,22 +46,23 @@ function JobDetailModal({ job, isApplied, onClose, onOpenApply }) {
     return () => { document.body.style.overflow = ""; };
   }, []);
   return (
-    <div className="fixed inset-0 z-[150] flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[150] flex items-end sm:items-center justify-center p-0 sm:p-4">
       <div
         className="absolute inset-0 bg-black/70 backdrop-blur-sm"
         onClick={onClose}
       />
-      <div className="relative z-10 w-full max-w-2xl bg-surface border border-white/10 rounded-3xl shadow-2xl animate-slide-up max-h-[90vh] flex flex-col">
-        <div className="flex items-start justify-between p-6 pb-4 border-b border-white/5 shrink-0">
-          <div className="flex-1 pr-4">
-            <h2 className="text-2xl font-bold text-textMain leading-tight mb-1">
+      <div className="relative z-10 w-full sm:max-w-2xl bg-surface border border-white/10 rounded-t-3xl sm:rounded-3xl shadow-2xl animate-slide-up max-h-[92vh] sm:max-h-[85vh] flex flex-col">
+        {/* Header */}
+        <div className="flex items-start justify-between p-4 sm:p-6 pb-3 sm:pb-4 border-b border-white/5 shrink-0">
+          <div className="flex-1 pr-3 sm:pr-4 min-w-0">
+            <h2 className="text-xl sm:text-2xl font-bold text-textMain leading-tight mb-1 break-words">
               {job.title}
             </h2>
-            <div className="flex flex-wrap items-center gap-2 mt-2">
-              <span className="badge badge-primary text-sm px-3 py-1">
+            <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mt-2">
+              <span className="badge badge-primary text-xs sm:text-sm px-2.5 sm:px-3 py-0.5 sm:py-1">
                 {job.company}
               </span>
-              <span className="text-textSoft text-sm flex items-center gap-1">
+              <span className="text-textSoft text-xs sm:text-sm flex items-center gap-1">
                 📍 {job.location}
               </span>
               {job.createdAt && (
@@ -80,49 +81,52 @@ function JobDetailModal({ job, isApplied, onClose, onOpenApply }) {
           </button>
         </div>
 
-        <div className="overflow-y-auto flex-1 p-6 space-y-6">
-          <div className="grid grid-cols-2 gap-3">
-            <div className="bg-bg/60 rounded-2xl p-4 border border-white/5">
-              <p className="text-xs text-textSoft/60 uppercase tracking-widest mb-1 font-medium">
+        {/* Scrollable body */}
+        <div className="overflow-y-auto overscroll-contain flex-1 p-4 sm:p-6 space-y-4 sm:space-y-6">
+          <div className="grid grid-cols-2 gap-2 sm:gap-3">
+            <div className="bg-bg/60 rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-white/5">
+              <p className="text-[10px] sm:text-xs text-textSoft/60 uppercase tracking-widest mb-1 font-medium">
                 Salary
               </p>
-              <p className="text-lg font-bold text-accent flex items-center gap-1.5">
+              <p className="text-base sm:text-lg font-bold text-accent flex items-center gap-1.5">
                 💰 {formatSalary(job.salary)}
               </p>
             </div>
-            <div className="bg-bg/60 rounded-2xl p-4 border border-white/5">
-              <p className="text-xs text-textSoft/60 uppercase tracking-widest mb-1 font-medium">
+            <div className="bg-bg/60 rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-white/5">
+              <p className="text-[10px] sm:text-xs text-textSoft/60 uppercase tracking-widest mb-1 font-medium">
                 Location
               </p>
-              <p className="text-lg font-bold text-textMain flex items-center gap-1.5">
+              <p className="text-base sm:text-lg font-bold text-textMain flex items-center gap-1.5 break-words">
                 📍 {job.location}
               </p>
             </div>
           </div>
           <div>
-            <h3 className="text-sm font-semibold text-textSoft/70 uppercase tracking-widest mb-3">
+            <h3 className="text-xs sm:text-sm font-semibold text-textSoft/70 uppercase tracking-widest mb-2 sm:mb-3">
               Job Description
             </h3>
-            <div className="text-textSoft leading-relaxed whitespace-pre-wrap text-sm bg-bg/40 rounded-2xl p-4 border border-white/5">
+            <div className="text-textSoft leading-relaxed whitespace-pre-wrap break-words text-sm bg-bg/40 rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-white/5">
               {job.description || "No description provided."}
             </div>
           </div>
         </div>
-        <div className="p-6 pt-4 border-t border-white/5 shrink-0 flex gap-3">
-          <button onClick={onClose} className="btn-secondary flex-1">
+
+        {/* Footer */}
+        <div className="p-4 sm:p-6 pt-3 sm:pt-4 border-t border-white/5 shrink-0 flex gap-2 sm:gap-3">
+          <button onClick={onClose} className="btn-secondary flex-1 text-sm sm:text-base">
             Close
           </button>
           {isApplied ? (
             <button
               disabled
-              className="flex-1 py-2.5 rounded-xl font-semibold bg-green-500/20 border border-green-500/30 text-green-400 cursor-not-allowed flex items-center justify-center gap-2"
+              className="flex-1 py-2.5 rounded-xl font-semibold text-sm sm:text-base bg-green-500/20 border border-green-500/30 text-green-400 cursor-not-allowed flex items-center justify-center gap-2"
             >
-              ✅ Already Applied
+              ✅ Applied
             </button>
           ) : (
             <button
               onClick={() => { onClose(); onOpenApply(job); }}
-              className="btn-primary flex-1"
+              className="btn-primary flex-1 text-sm sm:text-base"
             >
               Apply Now 🚀
             </button>
@@ -188,38 +192,41 @@ function ApplyModal({ job, onClose, onSuccess }) {
   };
 
   return (
-    <div className="fixed inset-0 z-[160] flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[160] flex items-end sm:items-center justify-center p-0 sm:p-4">
       <div
         className="absolute inset-0 bg-black/75 backdrop-blur-sm"
         onClick={() => !isSubmitting && onClose()}
       />
-      <div className="relative z-10 w-full max-w-lg bg-surface border border-white/10 rounded-3xl shadow-2xl animate-slide-up">
-        <div className="flex items-center justify-between p-6 pb-4 border-b border-white/5">
-          <div>
-            <h2 className="text-xl font-bold text-textMain">Apply for Position</h2>
-            <p className="text-textSoft/70 text-sm mt-0.5">
+      <div className="relative z-10 w-full sm:max-w-lg bg-surface border border-white/10 rounded-t-3xl sm:rounded-3xl shadow-2xl animate-slide-up max-h-[92vh] sm:max-h-[90vh] flex flex-col">
+        {/* Header */}
+        <div className="flex items-center justify-between p-4 sm:p-6 pb-3 sm:pb-4 border-b border-white/5 shrink-0">
+          <div className="min-w-0 flex-1 pr-2">
+            <h2 className="text-lg sm:text-xl font-bold text-textMain">Apply for Position</h2>
+            <p className="text-textSoft/70 text-xs sm:text-sm mt-0.5 truncate">
               {job.title} · <span className="text-primaryHover">{job.company}</span>
             </p>
           </div>
           <button
             onClick={() => !isSubmitting && onClose()}
-            className="btn-icon"
+            className="btn-icon shrink-0"
             disabled={isSubmitting}
           >
             ✕
           </button>
         </div>
-        <div className="p-6">
+
+        {/* Scrollable body */}
+        <div className="flex-1 overflow-y-auto overscroll-contain p-4 sm:p-6">
           {isDone ? (
-            <div className="flex flex-col items-center justify-center py-8 gap-4 animate-scale-in">
-              <div className="text-6xl animate-bounce">🎉</div>
-              <h3 className="text-xl font-bold text-green-400">Applied Successfully!</h3>
-              <p className="text-textSoft text-sm text-center">
+            <div className="flex flex-col items-center justify-center py-6 sm:py-8 gap-4 animate-scale-in">
+              <div className="text-5xl sm:text-6xl animate-bounce">🎉</div>
+              <h3 className="text-lg sm:text-xl font-bold text-green-400">Applied Successfully!</h3>
+              <p className="text-textSoft text-xs sm:text-sm text-center">
                 Your application for <strong>{job.title}</strong> at <strong>{job.company}</strong> has been submitted.
               </p>
             </div>
           ) : (
-            <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+            <form onSubmit={handleSubmit} className="flex flex-col gap-3 sm:gap-4">
               <div>
                 <label className="block text-sm font-medium text-textSoft mb-1.5">
                   Full Name
@@ -259,7 +266,7 @@ function ApplyModal({ job, onClose, onSuccess }) {
                   placeholder="https://drive.google.com/your-resume"
                 />
                 <p className="text-xs text-textSoft/50 mt-1">
-                  Paste a public link to your resume (Google Drive, Dropbox, etc.)
+                  Paste a public link to your resume
                 </p>
               </div>
               <div>
@@ -268,25 +275,25 @@ function ApplyModal({ job, onClose, onSuccess }) {
                   <span className="text-textSoft/40 font-normal">(optional)</span>
                 </label>
                 <textarea
-                  className="input-field min-h-[90px] resize-y"
+                  className="input-field min-h-[80px] sm:min-h-[90px] resize-y"
                   value={form.message}
                   onChange={(e) => setForm({ ...form, message: e.target.value })}
                   placeholder="Tell the recruiter why you're a great fit..."
                 />
               </div>
-              <div className="flex gap-3 mt-2">
+              <div className="flex gap-2 sm:gap-3 mt-2">
                 <button
                   type="button"
                   onClick={onClose}
                   disabled={isSubmitting}
-                  className="btn-secondary flex-1"
+                  className="btn-secondary flex-1 text-sm sm:text-base"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting || !form.resume.trim()}
-                  className="btn-primary flex-1"
+                  className="btn-primary flex-1 text-sm sm:text-base"
                 >
                   {isSubmitting ? (
                     <span className="flex items-center gap-2">
@@ -309,42 +316,41 @@ function ApplyModal({ job, onClose, onSuccess }) {
 function JobCard({ job, isApplied, justApplied, isApplying, onViewDetails, onApply }) {
   return (
     <div
-      className="card flex flex-col justify-between group cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-card-hover hover:-translate-y-1 hover:border-white/15"
+      className="card flex flex-col justify-between group cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-card-hover hover:-translate-y-1 hover:border-white/15 active:scale-[0.98] p-4 sm:p-6"
       onClick={() => onViewDetails(job)}
     >
       <div>
-        <h2 className="text-lg font-bold text-textMain leading-tight group-hover:text-primaryHover transition-colors mb-3">
+        <h2 className="text-base sm:text-lg font-bold text-textMain leading-tight group-hover:text-primaryHover transition-colors mb-2 sm:mb-3 break-words">
           {job.title}
         </h2>
-        <div className="flex flex-wrap items-center gap-2 mb-3">
-          <span className="badge badge-primary">{job.company}</span>
-          <span className="text-sm text-textSoft flex items-center gap-1 opacity-80">
+        <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mb-2 sm:mb-3">
+          <span className="badge badge-primary text-xs">{job.company}</span>
+          <span className="text-xs sm:text-sm text-textSoft flex items-center gap-1 opacity-80">
             📍 {job.location}
           </span>
         </div>
-        <div className="flex items-center gap-1.5 mb-3">
+        <div className="flex items-center gap-1.5 mb-2 sm:mb-3">
           <span
-            className={`text-sm font-semibold flex items-center gap-1 ${job.salary ? "text-accent" : "text-textSoft/50"
-              }`}
+            className={`text-xs sm:text-sm font-semibold flex items-center gap-1 ${job.salary ? "text-accent" : "text-textSoft/50"}`}
           >
             💰 {formatSalary(job.salary)}
           </span>
         </div>
-        <p className="text-sm text-textSoft line-clamp-2 mb-5 leading-relaxed">
+        <p className="text-xs sm:text-sm text-textSoft line-clamp-2 mb-4 sm:mb-5 leading-relaxed break-words">
           {job.description}
         </p>
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
         <button
           onClick={(e) => { e.stopPropagation(); onViewDetails(job); }}
-          className="btn-secondary flex-1 text-sm py-2"
+          className="btn-secondary flex-1 text-sm py-2.5 sm:py-2"
         >
           View Details
         </button>
         <button
           onClick={(e) => { e.stopPropagation(); if (!isApplied) onApply(job); }}
           disabled={isApplied || isApplying}
-          className={`flex-1 py-2 rounded-xl font-semibold transition-all duration-300 flex items-center justify-center gap-1.5 text-sm ${isApplied
+          className={`flex-1 py-2.5 sm:py-2 rounded-xl font-semibold transition-all duration-300 flex items-center justify-center gap-1.5 text-sm ${isApplied
             ? "bg-green-500/20 border border-green-500/30 text-green-400 cursor-not-allowed"
             : isApplying
               ? "bg-primary/60 text-white cursor-wait"
@@ -513,20 +519,20 @@ function Jobs() {
       </div>
 
       {/* Search & Filters */}
-      <div className="card sticky top-[60px] z-40 p-4 md:p-5 shadow-xl border-white/5 flex flex-col md:flex-row gap-3 items-stretch md:items-center">
+      <div className="card sticky top-[68px] z-40 p-3 sm:p-5 shadow-xl border-white/5 flex flex-col md:flex-row gap-2 sm:gap-3 items-stretch md:items-center bg-surface/90 backdrop-blur-md">
         <div className="relative flex-1">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-textSoft/60">🔍</span>
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-textSoft/60 text-sm">🔍</span>
           <input
             type="text"
-            placeholder="Search by title, company, or location..."
-            className="input-field pl-10 bg-bg/50"
+            placeholder="Search jobs..."
+            className="input-field pl-9 py-2.5 bg-bg/50 text-sm"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-        <div className="flex gap-3 w-full md:w-auto">
+        <div className="flex gap-2 w-full md:w-auto">
           <select
-            className="input-field bg-bg/50 flex-1 md:w-40 appearance-none cursor-pointer"
+            className="input-field bg-bg/50 flex-1 md:w-40 appearance-none cursor-pointer text-sm py-2.5"
             value={locationFilter}
             onChange={(e) => setLocationFilter(e.target.value)}
           >
@@ -536,7 +542,7 @@ function Jobs() {
             ))}
           </select>
           <select
-            className="input-field bg-bg/50 flex-1 md:w-40 appearance-none cursor-pointer"
+            className="input-field bg-bg/50 flex-1 md:w-40 appearance-none cursor-pointer text-sm py-2.5"
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
           >
@@ -611,22 +617,26 @@ function Jobs() {
 
       {/* ── Post Job Modal ── */}
       {isPostModalOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4">
           <div
             className="absolute inset-0 bg-black/70 backdrop-blur-sm"
             onClick={() => !isPosting && setIsPostModalOpen(false)}
           />
-          <div className="card w-full max-w-lg relative z-10 animate-slide-up bg-surface border-white/10 shadow-2xl rounded-3xl">
-            <button
-              onClick={() => !isPosting && setIsPostModalOpen(false)}
-              className="absolute top-4 right-4 btn-icon"
-            >
-              ✕
-            </button>
-            <h2 className="text-2xl font-bold text-textMain mb-1">Post a New Job</h2>
-            <p className="text-textSoft text-sm mb-6">Fill in the details to list a new position.</p>
+          <div className="card w-full sm:max-w-lg relative z-10 animate-slide-up bg-surface border-white/10 shadow-2xl rounded-t-3xl sm:rounded-3xl max-h-[92vh] flex flex-col">
+            <div className="flex items-center justify-between p-4 sm:p-6 pb-3 sm:pb-4 border-b border-white/5 shrink-0">
+              <div>
+                <h2 className="text-xl sm:text-2xl font-bold text-textMain">Post a New Job</h2>
+                <p className="text-textSoft text-xs sm:text-sm mt-0.5">Fill in the details to list a new position.</p>
+              </div>
+              <button
+                onClick={() => !isPosting && setIsPostModalOpen(false)}
+                className="btn-icon shrink-0"
+              >
+                ✕
+              </button>
+            </div>
 
-            <form onSubmit={handlePostJob} className="flex flex-col gap-4">
+            <form onSubmit={handlePostJob} className="flex-1 overflow-y-auto overscroll-contain p-4 sm:p-6 flex flex-col gap-4">
               <div>
                 <label className="block text-sm font-medium text-textSoft mb-1.5">Job Title *</label>
                 <input
@@ -690,7 +700,7 @@ function Jobs() {
                 />
               </div>
 
-              <div className="flex gap-3 mt-4">
+              <div className="flex gap-3 mt-4 shrink-0 pb-2">
                 <button
                   type="button"
                   onClick={() => setIsPostModalOpen(false)}
@@ -701,7 +711,7 @@ function Jobs() {
                 </button>
                 <button type="submit" disabled={isPosting} className="btn-primary w-full">
                   {isPosting ? (
-                    <span className="flex items-center gap-2">
+                    <span className="flex items-center gap-2 text-sm sm:text-base">
                       <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                       Posting...
                     </span>

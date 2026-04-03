@@ -11,16 +11,13 @@ function Home() {
   const [connectionsCount, setConnectionsCount] = useState(null);
   const [applicationsCount, setApplicationsCount] = useState(null);
   const [loading, setLoading] = useState(true);
-
   const firstName = user?.name?.split(" ")[0] || "there";
-
   const getGreeting = () => {
     const hour = new Date().getHours();
     if (hour < 12) return "Good morning";
     if (hour < 17) return "Good afternoon";
     return "Good evening";
   };
-
   useEffect(() => {
     const fetchStats = async () => {
       try {
@@ -38,13 +35,11 @@ function Home() {
     };
     fetchStats();
   }, []);
-
   const statItems = [
     { label: "Connections", value: connectionsCount, icon: "🤝", color: "text-primaryHover" },
     { label: "Applications", value: applicationsCount, icon: "📄", color: "text-accent" },
     { label: "Notifications", value: unreadCount, icon: "🔔", color: "text-red-400" },
   ];
-
   const quickActions = [
     {
       path: "/jobs",
@@ -90,12 +85,10 @@ function Home() {
 
   return (
     <div className="flex flex-col gap-8 animate-fade-in font-sans">
-
       {/* HERO / WELCOME */}
       <div className="card text-center bg-gradient-to-br from-surface to-bg border-white/10 relative overflow-hidden group py-10 md:py-14">
         <div className="absolute -top-24 -right-24 w-60 h-60 bg-primary/20 rounded-full blur-[80px] pointer-events-none group-hover:bg-primary/30 transition-colors duration-700"></div>
         <div className="absolute -bottom-24 -left-24 w-60 h-60 bg-accent/10 rounded-full blur-[80px] pointer-events-none group-hover:bg-accent/20 transition-colors duration-700"></div>
-        
         <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold gradient-text mb-3 tracking-tight relative z-10">
           {getGreeting()}, {firstName}! 👋
         </h1>
@@ -105,9 +98,9 @@ function Home() {
       </div>
 
       {/* STATS ROW */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
         {statItems.map((stat) => (
-          <div key={stat.label} className="card text-center py-5 hover:border-white/10 transition-all group">
+          <div key={stat.label} className="card text-center py-4 sm:py-5 hover:border-white/10 transition-all group last:col-span-2 md:last:col-span-1 border-white/5 shadow-md">
             {loading ? (
               <div className="flex flex-col items-center gap-2">
                 <div className="skeleton w-10 h-8 rounded-lg"></div>
@@ -115,11 +108,11 @@ function Home() {
               </div>
             ) : (
               <>
-                <span className="text-2xl mb-1 block">{stat.icon}</span>
-                <span className={`text-2xl md:text-3xl font-black ${stat.color} block`}>
+                <span className="text-xl sm:text-2xl mb-1 block">{stat.icon}</span>
+                <span className={`text-xl sm:text-2xl md:text-3xl font-black ${stat.color} block`}>
                   {stat.value ?? "—"}
                 </span>
-                <span className="text-xs text-textSoft font-medium uppercase tracking-wider mt-1 block">
+                <span className="text-[10px] sm:text-xs text-textSoft font-medium uppercase tracking-wider mt-1 block">
                   {stat.label}
                 </span>
               </>
@@ -129,18 +122,18 @@ function Home() {
       </div>
 
       {/* QUICK ACTIONS */}
-      <div>
-        <h2 className="text-lg font-semibold text-textMain mb-4 px-1">Quick Actions</h2>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5">
+      <div className="mt-8 sm:mt-10">
+        <h2 className="text-base sm:text-lg font-semibold text-textMain mb-4 px-1">Quick Actions</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-5">
           {quickActions.map((action) => (
             <Link key={action.path} to={action.path} className="group">
-              <div className="card card-hover h-full flex flex-col justify-center items-center text-center gap-4 py-8">
-                <div className={`w-14 h-14 rounded-2xl ${action.iconBg} ${action.iconColor} flex items-center justify-center text-2xl group-hover:scale-110 ${action.hoverBg} transition-all duration-300 shadow-sm`}>
+              <div className="card card-hover h-full flex flex-col justify-center items-center text-center gap-3 sm:gap-4 py-6 sm:py-8 active:scale-95 border-white/5 shadow-md">
+                <div className={`w-12 h-12 sm:w-14 sm:h-14 rounded-2xl ${action.iconBg} ${action.iconColor} flex items-center justify-center text-xl sm:text-2xl group-hover:scale-110 ${action.hoverBg} transition-all duration-300 shadow-sm`}>
                   {action.icon}
                 </div>
                 <div>
-                  <h2 className={`text-lg font-bold text-textMain mb-1.5 ${action.hoverColor} transition-colors`}>{action.title}</h2>
-                  <p className="text-textSoft text-sm leading-relaxed">{action.desc}</p>
+                  <h2 className={`text-base sm:text-lg font-bold text-textMain mb-1 ${action.hoverColor} transition-colors`}>{action.title}</h2>
+                  <p className="text-textSoft text-xs sm:text-sm leading-relaxed max-w-[200px]">{action.desc}</p>
                 </div>
               </div>
             </Link>

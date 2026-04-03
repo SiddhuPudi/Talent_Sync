@@ -15,14 +15,12 @@ function Navbar() {
     const { unreadCount } = useNotifications();
     const profileRef = useRef(null);
     const mobileMenuRef = useRef(null);
-
-    const userInitials = user?.name ? user.name.charAt(0).toUpperCase() : "U"; 
+    const userInitials = user?.name ? user.name.charAt(0).toUpperCase() : "U";
 
     // User Search States
     const [searchQuery, setSearchQuery] = useState("");
     const [searchResults, setSearchResults] = useState([]);
     const [isSearching, setIsSearching] = useState(false);
-    
     const debouncedSearch = useDebounce(searchQuery, 300);
 
     // Close dropdowns on outside click
@@ -47,7 +45,6 @@ function Navbar() {
 
     useEffect(() => {
         const controller = new AbortController();
-
         if (!debouncedSearch) {
             setSearchResults([]);
             return;
@@ -60,16 +57,15 @@ function Navbar() {
                 setSearchResults(res || []);
             } catch (e) {
                 if (e.name !== "CanceledError" && e.message !== "canceled") {
-                   console.error("Error searching users", e);
+                    console.error("Error searching users", e);
                 }
             } finally {
                 if (!controller.signal.aborted) {
-                   setIsSearching(false);
+                    setIsSearching(false);
                 }
             }
         };
         fetchSearch();
-
         return () => {
             controller.abort();
         };
@@ -82,7 +78,6 @@ function Navbar() {
     };
 
     const isActive = (path) => location.pathname === path;
-
     const navLinks = [
         { path: "/", label: "Home", icon: "🏠" },
         { path: "/jobs", label: "Jobs", icon: "💼" },
@@ -91,72 +86,68 @@ function Navbar() {
     ];
 
     return (
-        <nav className="sticky top-0 z-50 w-full glass px-4 md:px-6 py-3 shadow-lg border-b border-white/5 transition-all">
+        <nav className="sticky top-0 z-50 w-full bg-surface/80 backdrop-blur-md px-4 md:px-6 py-2.5 sm:py-3 shadow-lg border-b border-white/5 transition-all">
             <div className="flex items-center justify-between gap-4">
                 {/* Logo */}
                 <Link to="/" className="text-xl font-bold gradient-text shrink-0">
                     Talent Sync
                 </Link>
-
                 {/* Search - Desktop */}
                 <div className="relative hidden md:block flex-1 max-w-md mx-4">
-                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-textSoft/60 text-sm">🔍</span>
-                   <input 
-                      type="text" 
-                      placeholder="Search users..." 
-                      className="input-field pl-9 py-2 w-full bg-bg/50 border-white/5 text-sm focus:border-primary/50 focus:bg-bg"
-                      value={searchQuery}
-                      onChange={e => setSearchQuery(e.target.value)}
-                   />
-                   
-                   {/* Search Dropdown */}
-                   {searchQuery.length > 0 && (
-                       <div className="absolute top-full mt-2 w-full glass shadow-2xl rounded-xl overflow-hidden z-[100] max-h-[320px] overflow-y-auto hide-scrollbar animate-scale-in">
-                           {isSearching ? (
-                               <div className="p-4 text-center text-textSoft text-sm">
-                                   <div className="flex items-center justify-center gap-2">
-                                       <div className="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin"></div>
-                                       Searching...
-                                   </div>
-                               </div>
-                           ) : searchResults.length === 0 ? (
-                               <div className="p-6 text-center">
-                                   <span className="text-3xl opacity-40 block mb-2">🔍</span>
-                                   <p className="text-textSoft text-sm">No users found for "{searchQuery}"</p>
-                               </div>
-                           ) : (
-                               searchResults.map(u => (
-                                  <div 
-                                     key={u.id} 
-                                     onClick={() => handleSelectUser(u.id)}
-                                     className="px-4 py-3 hover:bg-white/5 cursor-pointer flex items-center gap-3 transition-all border-b border-white/5 last:border-0 group"
-                                  >
-                                      <div className="w-9 h-9 rounded-full bg-primary/20 flex items-center justify-center font-bold text-xs text-primaryHover shrink-0 border border-primary/30 group-hover:bg-primary/30 transition-colors">
-                                          {u.name.charAt(0).toUpperCase()}
-                                      </div>
-                                      <div className="min-w-0 flex-1">
-                                          <p className="text-sm font-semibold text-textMain truncate group-hover:text-primaryHover transition-colors">{u.name}</p>
-                                          {u.headline && <p className="text-xs text-textSoft truncate mt-0.5">{u.headline}</p>}
-                                      </div>
-                                      <span className="text-textSoft/30 group-hover:text-primaryHover transition-colors text-sm">↗</span>
-                                  </div>
-                               ))
-                           )}
-                       </div>
-                   )}
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-textSoft/60 text-sm">🔍</span>
+                    <input
+                        type="text"
+                        placeholder="Search users..."
+                        className="input-field pl-9 py-2 w-full bg-bg/50 border-white/5 text-sm focus:border-primary/50 focus:bg-bg"
+                        value={searchQuery}
+                        onChange={e => setSearchQuery(e.target.value)}
+                    />
+                    {/* Search Dropdown */}
+                    {searchQuery.length > 0 && (
+                        <div className="absolute top-full mt-2 w-full glass shadow-2xl rounded-xl overflow-hidden z-[100] max-h-[320px] overflow-y-auto hide-scrollbar animate-scale-in">
+                            {isSearching ? (
+                                <div className="p-4 text-center text-textSoft text-sm">
+                                    <div className="flex items-center justify-center gap-2">
+                                        <div className="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin"></div>
+                                        Searching...
+                                    </div>
+                                </div>
+                            ) : searchResults.length === 0 ? (
+                                <div className="p-6 text-center">
+                                    <span className="text-3xl opacity-40 block mb-2">🔍</span>
+                                    <p className="text-textSoft text-sm">No users found for "{searchQuery}"</p>
+                                </div>
+                            ) : (
+                                searchResults.map(u => (
+                                    <div
+                                        key={u.id}
+                                        onClick={() => handleSelectUser(u.id)}
+                                        className="px-4 py-3 hover:bg-white/5 cursor-pointer flex items-center gap-3 transition-all border-b border-white/5 last:border-0 group"
+                                    >
+                                        <div className="w-9 h-9 rounded-full bg-primary/20 flex items-center justify-center font-bold text-xs text-primaryHover shrink-0 border border-primary/30 group-hover:bg-primary/30 transition-colors">
+                                            {u.name.charAt(0).toUpperCase()}
+                                        </div>
+                                        <div className="min-w-0 flex-1">
+                                            <p className="text-sm font-semibold text-textMain truncate group-hover:text-primaryHover transition-colors">{u.name}</p>
+                                            {u.headline && <p className="text-xs text-textSoft truncate mt-0.5">{u.headline}</p>}
+                                        </div>
+                                        <span className="text-textSoft/30 group-hover:text-primaryHover transition-colors text-sm">↗</span>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+                    )}
                 </div>
-
                 {/* Desktop Nav Links */}
                 <div className="hidden md:flex items-center gap-1">
                     {navLinks.map(link => (
-                        <Link 
+                        <Link
                             key={link.path}
-                            to={link.path} 
-                            className={`relative px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
-                                isActive(link.path) 
-                                    ? 'text-textMain bg-white/5 shadow-sm' 
+                            to={link.path}
+                            className={`relative px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${isActive(link.path)
+                                    ? 'text-textMain bg-white/5 shadow-sm'
                                     : 'text-textSoft hover:text-textMain hover:bg-white/5'
-                            }`}
+                                }`}
                         >
                             <span className="hidden lg:inline">{link.label}</span>
                             <span className="lg:hidden">{link.icon}</span>
@@ -168,18 +159,16 @@ function Navbar() {
                         </Link>
                     ))}
                 </div>
-
                 {/* Profile Dropdown & Mobile Menu Button */}
                 <div className="flex items-center gap-2">
                     {/* Profile Dropdown - Desktop */}
                     <div className="relative" ref={profileRef}>
-                        <button 
+                        <button
                             onClick={() => setIsProfileOpen(!isProfileOpen)}
                             className="w-9 h-9 rounded-full bg-primary flex items-center justify-center text-white font-bold text-sm shadow-md ring-2 ring-transparent hover:ring-primaryHover/50 transition-all duration-200 hover:scale-105"
                         >
                             {userInitials}
                         </button>
-
                         {isProfileOpen && (
                             <div className="absolute right-0 top-full mt-2 w-56 glass rounded-xl shadow-2xl overflow-hidden animate-scale-in z-[100]">
                                 <div className="p-4 border-b border-white/5">
@@ -187,14 +176,14 @@ function Navbar() {
                                     <p className="text-xs text-textSoft truncate mt-0.5">{user?.email || ""}</p>
                                 </div>
                                 <div className="py-1">
-                                    <Link 
-                                        to="/profile" 
+                                    <Link
+                                        to="/profile"
                                         className="flex items-center gap-3 px-4 py-2.5 text-sm text-textSoft hover:text-textMain hover:bg-white/5 transition-colors"
                                     >
                                         <span>👤</span> View Profile
                                     </Link>
-                                    <Link 
-                                        to="/jobs" 
+                                    <Link
+                                        to="/jobs"
                                         className="flex items-center gap-3 px-4 py-2.5 text-sm text-textSoft hover:text-textMain hover:bg-white/5 transition-colors"
                                     >
                                         <span>💼</span> My Applications
@@ -211,9 +200,8 @@ function Navbar() {
                             </div>
                         )}
                     </div>
-
                     {/* Mobile Menu Toggle */}
-                    <button 
+                    <button
                         onClick={() => setIsMenuOpen(!isMenuOpen)}
                         className="md:hidden btn-icon"
                     >
@@ -223,16 +211,15 @@ function Navbar() {
                     </button>
                 </div>
             </div>
-
             {/* Mobile Menu */}
             {isMenuOpen && (
                 <div ref={mobileMenuRef} className="md:hidden mt-3 pt-3 border-t border-white/5 animate-slide-down">
                     {/* Mobile Search */}
                     <div className="relative mb-3">
                         <span className="absolute left-3 top-1/2 -translate-y-1/2 text-textSoft/60 text-sm">🔍</span>
-                        <input 
-                            type="text" 
-                            placeholder="Search users..." 
+                        <input
+                            type="text"
+                            placeholder="Search users..."
                             className="input-field pl-9 py-2.5 w-full bg-bg/50 border-white/5 text-sm"
                             value={searchQuery}
                             onChange={e => setSearchQuery(e.target.value)}
@@ -246,8 +233,8 @@ function Navbar() {
                                     <div className="p-4 text-center text-textSoft text-sm">No users found</div>
                                 ) : (
                                     searchResults.map(u => (
-                                        <div 
-                                            key={u.id} 
+                                        <div
+                                            key={u.id}
                                             onClick={() => handleSelectUser(u.id)}
                                             className="px-4 py-3 hover:bg-white/5 cursor-pointer flex items-center gap-3 transition-colors border-b border-white/5 last:border-0"
                                         >
@@ -261,18 +248,16 @@ function Navbar() {
                             </div>
                         )}
                     </div>
-
                     {/* Mobile Nav Links */}
                     <div className="flex flex-col gap-1">
                         {navLinks.map(link => (
                             <Link
                                 key={link.path}
                                 to={link.path}
-                                className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
-                                    isActive(link.path)
+                                className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${isActive(link.path)
                                         ? 'text-textMain bg-white/5'
                                         : 'text-textSoft hover:text-textMain hover:bg-white/5'
-                                }`}
+                                    }`}
                             >
                                 <span>{link.icon}</span>
                                 <span>{link.label}</span>
