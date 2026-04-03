@@ -1,4 +1,6 @@
 const connectionService = require("../services/connectionService");
+const prisma = require("../config/prisma");
+const sendEmail = require("../utils/sendEmail");
 
 exports.sendRequest = async (req, res) => {
     try {
@@ -7,6 +9,19 @@ exports.sendRequest = async (req, res) => {
             req.user.id,
             receiverId
         );
+        
+        // Async Email Notification
+        prisma.user.findUnique({ where: { id: receiverId } })
+            .then(receiver => {
+                if (receiver && receiver.email) {
+                    sendEmail({
+                        to: receiver.email,
+                        subject: "New Connection Request",
+                        message: "You have received a connection request on Talent Sync."
+                    });
+                }
+            })
+            .catch(console.error);
         
         const io = req.app.get("io");
         if (io) {
@@ -39,6 +54,21 @@ exports.respondRequest = async (req, res) => {
             req.user.id,
             status
         );
+        
+        // Async Email Notification
+        if (status === "accepted") {
+            prisma.user.findUnique({ where: { id: result.senderId } })
+                .then(sender => {
+                    if (sender && sender.email) {
+                        sendEmail({
+                            to: sender.email,
+                            subject: "Connection Accepted",
+                            message: "Your connection request has been accepted."
+                        });
+                    }
+                })
+                .catch(console.error);
+        }
         
         const io = req.app.get("io");
         if (io) {

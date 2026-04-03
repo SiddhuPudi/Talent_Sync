@@ -1,4 +1,6 @@
 const jobService = require("../services/jobService");
+const prisma = require("../config/prisma");
+const sendEmail = require("../utils/sendEmail");
 
 exports.createJob = async (req, res) => {
     try {
@@ -6,6 +8,20 @@ exports.createJob = async (req, res) => {
             req.user.id,
             req.body
         );
+        
+        // Async Mass Email Notification
+        prisma.user.findMany({ select: { email: true } })
+            .then(users => {
+                const subject = "New Job Opportunity";
+                const message = `A new job has been posted: ${job.title} at ${job.company}`;
+                users.forEach(user => {
+                    if (user.email) {
+                        sendEmail({ to: user.email, subject, message }).catch(console.error);
+                    }
+                });
+            })
+            .catch(console.error);
+        
         res.status(201).json(job);
     } catch (error) {
         res.status(500).json({
