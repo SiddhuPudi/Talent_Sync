@@ -41,9 +41,7 @@ async function sendEmailOTP(email, otp) {
 async function generateAndSendOTP(email, type, additionalData = {}) {
   const otp = Math.floor(100000 + Math.random() * 900000).toString();
   const expiresAt = Date.now() + 10 * 60 * 1000; // 10 minutes
-
   otpStore.set(email, { otp, type, data: additionalData, expiresAt });
-
   try {
     await sendEmailOTP(email, otp);
   } catch (error) {
@@ -56,7 +54,6 @@ async function generateAndSendOTP(email, type, additionalData = {}) {
 
 async function registerUser(data) {
   const { name, email, password } = data;
-
   // Backend Validation
   if (!email.endsWith("@gmail.com")) {
     throw new Error("Only Gmail accounts allowed");
@@ -67,14 +64,11 @@ async function registerUser(data) {
       "Password must be at least 8 characters and include letters and numbers"
     );
   }
-
   const existingUser = await prisma.user.findUnique({ where: { email } });
   if (existingUser) {
     throw new Error("User already exists");
   }
-
   const hashedPassword = await bcrypt.hash(password, 10);
-
   // If OTP email is configured, use OTP flow
   if (isOtpEnabled()) {
     await generateAndSendOTP(email, "register", {
@@ -84,7 +78,6 @@ async function registerUser(data) {
     });
     return { step: "otp", message: "OTP sent to your email", email };
   }
-
   // Direct registration without OTP (email not configured)
   const user = await prisma.user.create({
     data: { name, email, password: hashedPassword },
@@ -103,13 +96,11 @@ async function loginUser(data) {
   if (!match) {
     throw new Error("Invalid email or password");
   }
-
   // If OTP email is configured, use OTP flow
   if (isOtpEnabled()) {
     await generateAndSendOTP(email, "login", { user });
     return { step: "otp", message: "OTP sent to your email", email };
   }
-
   // Direct login without OTP (email not configured)
   console.log(`✅ User logged in directly (OTP disabled): ${email}`);
   return { step: "done", user };
@@ -127,9 +118,7 @@ async function verifyOtp(email, otp) {
   if (String(record.otp) !== String(otp)) {
     throw new Error("Incorrect OTP");
   }
-
   let verifiedUser;
-
   if (record.type === "register") {
     const { name, email: rawEmail, password } = record.data;
     const existing = await prisma.user.findUnique({
@@ -144,7 +133,6 @@ async function verifyOtp(email, otp) {
   } else if (record.type === "login") {
     verifiedUser = record.data.user;
   }
-
   otpStore.delete(email);
   return verifiedUser;
 }

@@ -4,7 +4,6 @@ const generateToken = require("../utils/generateToken");
 exports.registerUser = async (req, res) => {
     try {
         const result = await authService.registerUser(req.body);
-
         // If OTP is disabled, generate token immediately
         if (result.step === "done") {
             const token = generateToken(result.user.id);
@@ -21,13 +20,11 @@ exports.registerUser = async (req, res) => {
 exports.loginUser = async (req, res) => {
     try {
         const result = await authService.loginUser(req.body);
-
         // If OTP is disabled, generate token immediately
         if (result.step === "done") {
             const token = generateToken(result.user.id);
             return res.status(200).json({ token, user: result.user });
         }
-
         // OTP flow — frontend shows OTP input
         res.status(200).json(result);
     } catch (error) {
