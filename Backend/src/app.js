@@ -1,6 +1,7 @@
 const express = require("express");
 const cors = require("cors");
-require("dotenv").config({ path: ".env" });
+const path = require("path");
+require("dotenv").config({ path: path.resolve(__dirname, "../.env") });
 const swaggerUi = require("swagger-ui-express");
 const swaggerSpec = require("./config/swagger");
 const authRoutes = require("./routes/authRoutes");
@@ -14,7 +15,6 @@ const notificationRoutes = require("./routes/notificationRoutes");
 const errorMiddleware = require("./middlewares/errorMiddleware");
 const { authLimiter, readLimiter, writeLimiter } = require("./middlewares/rateLimiter");
 const requestLogger = require("./middlewares/requestLogger");
-const path = require("path");
 const app = express();
 
 const allowedOrigins = [
