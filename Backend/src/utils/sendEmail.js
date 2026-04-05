@@ -1,42 +1,79 @@
 const nodemailer = require("nodemailer");
 
 let transporter = null;
+let transporterReady = false;
 
-function getTransporter() {
-  if (transporter) return transporter;
+function createTransporter() {
   const user = process.env.EMAIL_USER;
   const pass = process.env.EMAIL_PASS;
   if (!user || !pass) {
     console.error("❌ EMAIL_USER or EMAIL_PASS is not set in environment variables");
+    console.error("   EMAIL_USER:", user ? `${user.substring(0, 3)}***` : "NOT SET");
+    console.error("   EMAIL_PASS:", pass ? "SET (hidden)" : "NOT SET");
     return null;
   }
-  transporter = nodemailer.createTransport({
-    service: "gmail",
-    auth: { user, pass },
+  console.log(`📧 Creating email transporter for: ${user}`);
+  // Use explicit SMTP settings instead of the "gmail" service shorthand
+  // This is more reliable on cloud platforms like Render
+  const t = nodemailer.createTransport({
+    host: "smtp.gmail.com",
+    port: 465,
+    secure: true, // use SSL
+    auth: {
+      user,
+      pass,
+    },
+    // Increase timeouts for cloud environments
+    connectionTimeout: 10000,
+    greetingTimeout: 10000,
+    socketTimeout: 15000,
   });
-  // Verify connection on first use
-  transporter.verify((err, success) => {
-    if (err) {
-      console.error("❌ Email transporter verification failed:", err.message);
-      console.error("   → Make sure EMAIL_USER is your Gmail address");
-      console.error("   → Make sure EMAIL_PASS is a valid Gmail App Password (not your regular password)");
-      console.error("   → To generate an App Password: Google Account → Security → 2FA → App Passwords");
-      transporter = null;
-    } else {
-      console.log("✅ Email transporter is ready");
-    }
-  });
-  return transporter;
+  return t;
+}
+
+async function getTransporter() {
+  if (transporter && transporterReady) {
+    return transporter;
+  }
+  transporter = createTransporter();
+  if (!transporter) {
+    return null;
+  }
+  // Actually await the verification instead of fire-and-forget
+  try {
+    await transporter.verify();
+    transporterReady = true;
+    console.log("✅ Email transporter verified and ready");
+    return transporter;
+  } catch (err) {
+    console.error("❌ Email transporter verification failed:", err.message);
+    console.error("   Full error:", JSON.stringify({
+      code: err.code,
+      command: err.command,
+      response: err.response,
+      responseCode: err.responseCode
+    }));
+    console.error("   → Make sure EMAIL_USER is your Gmail address");
+    console.error("   → Make sure EMAIL_PASS is a valid 16-character Gmail App Password");
+    console.error("   → To generate: Google Account → Security → 2-Step Verification → App Passwords");
+    // Reset so next attempt creates a fresh transporter
+    transporter = null;
+    transporterReady = false;
+    return null;
+  }
 }
 
 const sendEmail = async ({ to, subject, message }) => {
-  const t = getTransporter();
+  const t = await getTransporter();
   if (!t) {
-    throw new Error("Email service is not configured. Check EMAIL_USER and EMAIL_PASS.");
+    throw new Error(
+      "Email service is not configured or Gmail rejected the credentials. " +
+      "Check server logs for details."
+    );
   }
 
   const mailOptions = {
-    from: process.env.EMAIL_USER,
+    from: `"Talent Sync" <${process.env.EMAIL_USER}>`,
     to,
     subject,
     html: `
@@ -50,8 +87,24 @@ const sendEmail = async ({ to, subject, message }) => {
       </div>
     `,
   };
-  await t.sendMail(mailOptions);
-  console.log(`✅ Email sent successfully to ${to}`);
+
+  try {
+    const info = await t.sendMail(mailOptions);
+    console.log(`✅ Email sent successfully to ${to} (messageId: ${info.messageId})`);
+    return info;
+  } catch (err) {
+    console.error(`❌ Failed to send email to ${to}:`, err.message);
+    console.error("   Error code:", err.code);
+    console.error("   Response:", err.response);
+    
+    // Reset transporter on auth errors so it re-verifies next time
+    if (err.code === "EAUTH" || err.responseCode === 535) {
+      transporter = null;
+      transporterReady = false;
+    }
+    
+    throw err;
+  }
 };
 
 module.exports = sendEmail;

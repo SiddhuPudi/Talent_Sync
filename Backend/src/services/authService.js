@@ -7,24 +7,19 @@ const sendEmail = require("../utils/sendEmail");
 const otpStore = new Map();
 
 async function sendEmailOTP(email, otp) {
-  try {
-    await sendEmail({
-      to: email,
-      subject: "Your Talent Sync Verification Code",
-      message: `
-        <div style="text-align: center;">
-          <p style="font-size: 16px; color: #374151; margin-bottom: 20px;">Your verification code is:</p>
-          <div style="background: #F3F4F6; border-radius: 8px; padding: 20px; display: inline-block; margin-bottom: 20px;">
-            <span style="font-size: 32px; font-weight: bold; letter-spacing: 6px; color: #4F46E5;">${otp}</span>
-          </div>
-          <p style="font-size: 14px; color: #9CA3AF;">This code expires in 10 minutes.</p>
+  await sendEmail({
+    to: email,
+    subject: "Your Talent Sync Verification Code",
+    message: `
+      <div style="text-align: center;">
+        <p style="font-size: 16px; color: #374151; margin-bottom: 20px;">Your verification code is:</p>
+        <div style="background: #F3F4F6; border-radius: 8px; padding: 20px; display: inline-block; margin-bottom: 20px;">
+          <span style="font-size: 32px; font-weight: bold; letter-spacing: 6px; color: #4F46E5;">${otp}</span>
         </div>
-      `,
-    });
-  } catch (error) {
-    console.error("❌ Error sending OTP email:", error.message);
-    throw new Error("Failed to send verification email. Please check server configuration.");
-  }
+        <p style="font-size: 14px; color: #9CA3AF;">This code expires in 10 minutes.</p>
+      </div>
+    `,
+  });
 }
 
 async function generateAndSendOTP(email, type, additionalData = {}) {
@@ -32,7 +27,15 @@ async function generateAndSendOTP(email, type, additionalData = {}) {
   const expiresAt = Date.now() + 10 * 60 * 1000; // 10 minutes
 
   otpStore.set(email, { otp, type, data: additionalData, expiresAt });
-  await sendEmailOTP(email, otp);
+
+  try {
+    await sendEmailOTP(email, otp);
+  } catch (error) {
+    // Clean up the OTP if email fails
+    otpStore.delete(email);
+    console.error("❌ OTP email send failed:", error.message);
+    throw new Error("Failed to send verification email. Please check server configuration.");
+  }
   return true;
 }
 
@@ -101,7 +104,6 @@ async function verifyOtp(email, otp) {
 
   if (record.type === "register") {
     const { name, email: rawEmail, password } = record.data;
-    // Verify user doesn't exist just in case
     const existing = await prisma.user.findUnique({
       where: { email: rawEmail },
     });
@@ -112,16 +114,14 @@ async function verifyOtp(email, otp) {
       data: {
         name,
         email: rawEmail,
-        password, // already hashed
+        password,
       },
     });
   } else if (record.type === "login") {
     verifiedUser = record.data.user;
   }
 
-  // Cleanup
   otpStore.delete(email);
-
   return verifiedUser;
 }
 

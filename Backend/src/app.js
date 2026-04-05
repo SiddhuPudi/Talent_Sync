@@ -65,4 +65,16 @@ app.get("/", (req, res) => {
 app.get("/health", (req, res) => {
   res.status(200).json({ status: "OK" });
 });
+// Diagnostic endpoint — check if email env vars are configured
+app.get("/debug/email", (req, res) => {
+  const emailUser = process.env.EMAIL_USER;
+  const emailPass = process.env.EMAIL_PASS;
+  res.json({
+    EMAIL_USER_SET: !!emailUser,
+    EMAIL_USER_PREVIEW: emailUser ? `${emailUser.substring(0, 5)}...` : "NOT SET",
+    EMAIL_PASS_SET: !!emailPass,
+    EMAIL_PASS_LENGTH: emailPass ? emailPass.length : 0,
+    NODE_ENV: process.env.NODE_ENV || "not set",
+  });
+});
 module.exports = app;
