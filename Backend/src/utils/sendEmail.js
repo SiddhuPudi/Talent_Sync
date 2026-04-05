@@ -87,7 +87,6 @@ const sendEmail = async ({ to, subject, message }) => {
       </div>
     `,
   };
-
   try {
     const info = await t.sendMail(mailOptions);
     console.log(`✅ Email sent successfully to ${to} (messageId: ${info.messageId})`);
