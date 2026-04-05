@@ -1,28 +1,12 @@
 const prisma = require("../config/prisma");
 const bcrypt = require("bcrypt");
-
-// Try to load sendEmail, but don't crash if it's misconfigured
-let sendEmail;
-try {
-  sendEmail = require("../utils/sendEmail");
-} catch (e) {
-  console.warn("⚠️ sendEmail module failed to load:", e.message);
-  sendEmail = null;
-}
+const sendEmail = require("../utils/sendEmail");
 
 // In-memory OTP store
 // Map key: email, value: { otp, type, data, expiresAt }
 const otpStore = new Map();
 
-// Check if email OTP is enabled (credentials configured)
-function isOtpEnabled() {
-  return !!(process.env.EMAIL_USER && process.env.EMAIL_PASS);
-}
-
 async function sendEmailOTP(email, otp) {
-  if (!sendEmail) {
-    throw new Error("Email service is not available");
-  }
   await sendEmail({
     to: email,
     subject: "Your Talent Sync Verification Code",
@@ -38,22 +22,26 @@ async function sendEmailOTP(email, otp) {
   });
 }
 
-async function generateAndSendOTP(email, type, additionalData = {}) {
+async function tryGenerateAndSendOTP(email, type, additionalData = {}) {
   const otp = Math.floor(100000 + Math.random() * 900000).toString();
   const expiresAt = Date.now() + 10 * 60 * 1000; // 10 minutes
+
   otpStore.set(email, { otp, type, data: additionalData, expiresAt });
+
   try {
     await sendEmailOTP(email, otp);
+    return { sent: true };
   } catch (error) {
+    // Clean up OTP on failure
     otpStore.delete(email);
-    console.error("❌ OTP email send failed:", error.message);
-    throw new Error("Failed to send verification email. Please check server configuration.");
+    console.error("❌ OTP email send failed, falling back to direct auth:", error.message);
+    return { sent: false, error: error.message };
   }
-  return true;
 }
 
 async function registerUser(data) {
   const { name, email, password } = data;
+
   // Backend Validation
   if (!email.endsWith("@gmail.com")) {
     throw new Error("Only Gmail accounts allowed");
@@ -64,25 +52,34 @@ async function registerUser(data) {
       "Password must be at least 8 characters and include letters and numbers"
     );
   }
+
   const existingUser = await prisma.user.findUnique({ where: { email } });
   if (existingUser) {
     throw new Error("User already exists");
   }
+
   const hashedPassword = await bcrypt.hash(password, 10);
-  // If OTP email is configured, use OTP flow
-  if (isOtpEnabled()) {
-    await generateAndSendOTP(email, "register", {
+
+  // Try OTP flow first
+  if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+    const otpResult = await tryGenerateAndSendOTP(email, "register", {
       name,
       email,
       password: hashedPassword,
     });
-    return { step: "otp", message: "OTP sent to your email", email };
+
+    if (otpResult.sent) {
+      return { step: "otp", message: "OTP sent to your email", email };
+    }
+    // OTP failed — fall through to direct registration
+    console.log("⚠️ Email failed, proceeding with direct registration");
   }
-  // Direct registration without OTP (email not configured)
+
+  // Direct registration (no OTP)
   const user = await prisma.user.create({
     data: { name, email, password: hashedPassword },
   });
-  console.log(`✅ User registered directly (OTP disabled): ${email}`);
+  console.log(`✅ User registered directly: ${email}`);
   return { step: "done", user };
 }
 
@@ -96,13 +93,20 @@ async function loginUser(data) {
   if (!match) {
     throw new Error("Invalid email or password");
   }
-  // If OTP email is configured, use OTP flow
-  if (isOtpEnabled()) {
-    await generateAndSendOTP(email, "login", { user });
-    return { step: "otp", message: "OTP sent to your email", email };
+
+  // Try OTP flow first
+  if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+    const otpResult = await tryGenerateAndSendOTP(email, "login", { user });
+
+    if (otpResult.sent) {
+      return { step: "otp", message: "OTP sent to your email", email };
+    }
+    // OTP failed — fall through to direct login
+    console.log("⚠️ Email failed, proceeding with direct login");
   }
-  // Direct login without OTP (email not configured)
-  console.log(`✅ User logged in directly (OTP disabled): ${email}`);
+
+  // Direct login (no OTP)
+  console.log(`✅ User logged in directly: ${email}`);
   return { step: "done", user };
 }
 
@@ -118,7 +122,9 @@ async function verifyOtp(email, otp) {
   if (String(record.otp) !== String(otp)) {
     throw new Error("Incorrect OTP");
   }
+
   let verifiedUser;
+
   if (record.type === "register") {
     const { name, email: rawEmail, password } = record.data;
     const existing = await prisma.user.findUnique({
@@ -133,6 +139,7 @@ async function verifyOtp(email, otp) {
   } else if (record.type === "login") {
     verifiedUser = record.data.user;
   }
+
   otpStore.delete(email);
   return verifiedUser;
 }
@@ -141,5 +148,5 @@ module.exports = {
   registerUser,
   loginUser,
   verifyOtp,
-  generateAndSendOTP,
+  tryGenerateAndSendOTP,
 };
