@@ -4,6 +4,14 @@ const generateToken = require("../utils/generateToken");
 exports.registerUser = async (req, res) => {
     try {
         const result = await authService.registerUser(req.body);
+
+        // If OTP is disabled, generate token immediately
+        if (result.step === "done") {
+            const token = generateToken(result.user.id);
+            return res.status(201).json({ token, user: result.user });
+        }
+
+        // OTP flow — frontend shows OTP input
         res.status(200).json(result);
     } catch (error) {
         res.status(400).json({ message: error.message });
@@ -13,6 +21,14 @@ exports.registerUser = async (req, res) => {
 exports.loginUser = async (req, res) => {
     try {
         const result = await authService.loginUser(req.body);
+
+        // If OTP is disabled, generate token immediately
+        if (result.step === "done") {
+            const token = generateToken(result.user.id);
+            return res.status(200).json({ token, user: result.user });
+        }
+
+        // OTP flow — frontend shows OTP input
         res.status(200).json(result);
     } catch (error) {
         res.status(400).json({ message: error.message });
@@ -24,10 +40,7 @@ exports.verifyOtp = async (req, res) => {
         const { email, otp } = req.body;
         const user = await authService.verifyOtp(email, otp);
         const token = generateToken(user.id);
-        res.status(200).json({
-            token,
-            user
-        });
+        res.status(200).json({ token, user });
     } catch (error) {
         res.status(400).json({ message: error.message });
     }
