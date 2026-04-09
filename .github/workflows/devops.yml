@@ -1,43 +1,38 @@
-name: DevOps Pipeline
+name: CI/CD Pipeline
 
 on:
   push:
-    branches: [ "main" ]
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
 
 jobs:
-  build:
+  build-and-lint:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      - name: Setup Node
-        uses: actions/setup-node@v3
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: '20'
 
-      - name: Install frontend deps
-        run: |
-          cd frontend
-          npm install
+      - name: Install Backend Dependencies
+        working-directory: ./Backend
+        run: npm ci || npm install
 
-      - name: Build frontend
-        run: |
-          cd frontend
-          npm run build
+      - name: Install Frontend Dependencies
+        working-directory: ./frontend
+        run: npm ci || npm install
 
-      - name: Setup Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: 3.11
+      - name: Lint Frontend
+        working-directory: ./frontend
+        run: npm run lint
 
-      - name: Install backend deps
-        run: |
-          cd backend
-          pip install -r requirements.txt
-
-      - name: Run tests
-        run: |
-          cd backend
-          pytest
+      - name: Build Frontend
+        working-directory: ./frontend
+        run: npm run build
