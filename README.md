@@ -1,5 +1,7 @@
 # 🚀 Talent Sync
 
+![CI/CD Pipeline](https://github.com/SiddhuPudi/Talent_Sync/actions/workflows/devOps.yml/badge.svg)
+
 **A full-stack job searching platform built with modern technologies, featuring real-time communication, job management, and scalable architecture.**
 
 ---
@@ -59,7 +61,8 @@
 | **Containerization** | Docker & Docker Compose |
 | **API Docs** | Swagger (swagger-ui-express) |
 | **Email Service** | Nodemailer |
-| **Deployment** | Render(Backend), Vercel(Frontend) |
+| **Deployment** | Render (Backend), Vercel (Frontend) |
+| **CI/CD** | GitHub Actions |
 | **Logging** | Winston |
 | **Caching** | Redis |
 | **Event Streaming** | Apache Kafka (KafkaJS) |
@@ -70,6 +73,10 @@
 
 ```
 Talent_Sync/
+│
+├── .github/
+│   └── workflows/
+│       └── devOps.yml       # CI/CD pipeline (GitHub Actions)
 │
 ├── Backend/
 │   ├── prisma/              # Database schema & migrations
@@ -205,6 +212,58 @@ The frontend coordinates with exponential backoff retry (2s → 4s → 8s) and 3
 
 ---
 
+## 🔄 CI/CD Pipeline
+
+The project uses **GitHub Actions** for continuous integration and deployment, defined in [`.github/workflows/devOps.yml`](.github/workflows/devOps.yml).
+
+**Triggers:** `push` to `main` / `dev` and `pull_request` to `main`
+
+### Pipeline Architecture
+
+```mermaid
+graph LR
+  A[🖥️ Frontend] --> C[🧪 Integration]
+  B[⚙️ Backend] --> C
+  C --> D{Branch?}
+  D -->|main| E[🚀 Production]
+  D -->|dev| F[🧪 Staging]
+```
+
+### Jobs Overview
+
+| Job | Runs On | Description |
+|-----|---------|-------------|
+| **🖥️ Frontend** | `ubuntu-latest` | Installs deps (cached), lints, builds, creates Docker image & uploads as artifact |
+| **⚙️ Backend** | `ubuntu-latest` | Installs deps (cached), creates Docker image & uploads as artifact |
+| **🧪 Integration** | `ubuntu-latest` | Downloads pre-built images, runs Docker Compose, verifies all containers are healthy |
+| **🚀 Deploy Production** | `ubuntu-latest` | Deploys to Render & Vercel, runs health checks against live URLs *(main branch only)* |
+| **🧪 Deploy Staging** | `ubuntu-latest` | Deploys to staging environments *(dev branch only)* |
+
+### Key Features
+
+| Feature | Details |
+|---------|---------|
+| **Docker Image Artifacts** | Images built once in frontend/backend jobs, saved as artifacts, and reused in integration — no duplicate builds |
+| **Dependency Caching** | `actions/cache@v4` caches `~/.npm` keyed by `package-lock.json` hash — faster CI runs |
+| **Parallel Jobs** | Frontend & Backend jobs run simultaneously, integration waits for both |
+| **Concurrency Control** | Duplicate runs on the same branch are auto-cancelled |
+| **Environment-Based Deploy** | `main` → Production, `dev` → Staging |
+| **Health Checks** | `curl -f` validates both live Backend & Frontend URLs post-deploy |
+| **Graceful Teardown** | Docker Compose is torn down even if prior steps fail (`if: always()`) |
+
+### Required GitHub Secrets
+
+| Secret | Environment | Purpose |
+|--------|-------------|---------|
+| `DATABASE_URL` | Backend | PostgreSQL connection string for Docker Compose |
+| `JWT_SECRET` | Backend | JWT signing secret for the backend |
+| `RENDER_DEPLOY_HOOK` | - | Render deploy webhook URL (Backend) |
+| `VERCEL_DEPLOY_HOOK` | - | Vercel deploy webhook URL (Frontend) |
+| `RENDER_STAGING_DEPLOY_HOOK` | Staging | Render staging deploy webhook URL |
+| `VERCEL_STAGING_DEPLOY_HOOK` | Staging | Vercel staging deploy webhook URL |
+
+---
+
 ## 🧠 Key Highlights
 
 - **Real-time chat system using Socket.IO**
@@ -213,6 +272,7 @@ The frontend coordinates with exponential backoff retry (2s → 4s → 8s) and 3
 - **Persistent state across refresh**
 - **Clean and responsive UI design**
 - **Modular and scalable architecture**
+- **Automated CI/CD pipeline with GitHub Actions**
 
 ---
 
@@ -223,7 +283,6 @@ The frontend coordinates with exponential backoff retry (2s → 4s → 8s) and 3
 - [ ] Advanced search filters (salary range, job type, experience)
 - [ ] Password reset flow
 - [ ] Mobile app (React Native)
-- [ ] CI/CD pipeline with GitHub Actions
 
 ---
 
