@@ -47,3 +47,16 @@ jobs:
       - name: Build Frontend Docker Image
         run: |
           docker build -t talent-sync-frontend ./frontend
+
+      - name: Run Docker Compose
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+        run: |
+          docker compose up -d
+          
+      - name: Wait for services
+        run: sleep 20
+
+      - name: Check running containers
+        run: docker ps

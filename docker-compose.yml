@@ -76,7 +76,7 @@ services:
       - kafka_data:/var/lib/kafka/data
 
   backend:
-    build: ./backend
+    build: ./Backend
     container_name: backend
     restart: unless-stopped
     depends_on:
@@ -84,8 +84,9 @@ services:
         condition: service_healthy
     ports:
       - "3000:3000"
-    env_file:
-      - ./backend/.env
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - JWT_SECRET=${JWT_SECRET}
     command: >
       sh -c "
       npx prisma migrate deploy &&
