@@ -1,6 +1,6 @@
 # 🚀 Talent Sync
 
-![CI/CD Pipeline](https://github.com/SiddhuPudi/Talent_Sync/actions/workflows/devOps.yml/badge.svg)
+![CI/CD Pipeline](https://github.com/SiddhuPudi/Talent_Sync/actions/workflows/devops.yml/badge.svg)
 
 **A full-stack job searching platform built with modern technologies, featuring real-time communication, job management, and scalable architecture.**
 
@@ -214,7 +214,7 @@ The frontend coordinates with exponential backoff retry (2s → 4s → 8s) and 3
 
 ## 🔄 CI/CD Pipeline
 
-The project uses **GitHub Actions** for continuous integration and deployment, defined in [`.github/workflows/devOps.yml`](.github/workflows/devOps.yml).
+The project uses **GitHub Actions** for continuous integration and deployment, defined in [`.github/workflows/devOps.yml`](.github/workflows/devops.yml).
 
 **Triggers:** `push` to `main` / `dev` and `pull_request` to `main`
 
