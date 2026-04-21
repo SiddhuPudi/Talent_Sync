@@ -60,3 +60,11 @@ jobs:
 
       - name: Check running containers
         run: docker ps
+
+      - name: Deploy Backend to Render
+        run: |
+          curl -X POST ${{ secrets.RENDER_DEPLOY_HOOK }}
+
+      - name: Deploy Frontend to Vercel
+        run: |
+          curl -X POST ${{ secrets.VERCEL_DEPLOY_HOOK }}
