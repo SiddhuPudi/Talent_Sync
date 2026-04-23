@@ -154,7 +154,7 @@ jobs:
 
       - name: Run Docker Compose
         env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DATABASE_URL: postgresql://postgres:postgres@postgres:5432/talent_sync
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
         run: docker compose up -d
 
