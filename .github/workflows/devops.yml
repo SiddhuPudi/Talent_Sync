@@ -91,6 +91,10 @@ jobs:
         working-directory: ./Backend
         run: npm ci || npm install
 
+      - name: Run Backend Tests
+        working-directory: ./Backend
+        run: npm test
+
       - name: Build Docker Image
         run: docker build -t talent-sync-backend ./Backend
 

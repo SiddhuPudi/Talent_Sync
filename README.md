@@ -193,7 +193,7 @@ KAFKA_BROKER=localhost:9092
 ### Frontend (`frontend/.env`)
 
 ```env
-VITE_API_URL=http://localhost:5173
+VITE_API_URL=http://localhost:3000
 ```
 
 ---
