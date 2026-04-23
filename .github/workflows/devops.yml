@@ -48,7 +48,7 @@ jobs:
 
       - name: Build
         working-directory: ./frontend
-        run: npm run build || true
+        run: npm run build
 
       - name: Build Docker Image
         run: docker build -t talent-sync-frontend ./frontend
@@ -93,7 +93,17 @@ jobs:
 
       - name: Run Backend Tests
         working-directory: ./Backend
-        run: npm test
+        env:
+          NODE_ENV: test
+        run: npm test -- --ci
+
+      - name: Upload Coverage Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-coverage
+          path: Backend/coverage/
+          retention-days: 7
 
       - name: Build Docker Image
         run: docker build -t talent-sync-backend ./Backend
@@ -144,17 +154,34 @@ jobs:
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
         run: docker compose up -d
 
-      - name: Wait for services to start
-        run: sleep 25
+      - name: Health Check — Backend Container
+        run: |
+          echo "🏥 Checking backend health endpoint..."
+          for i in $(seq 1 10); do
+            if curl -sf http://localhost:3000/health; then
+              echo ""
+              echo "✅ Backend is healthy!"
+              exit 0
+            fi
+            echo "⏳ Attempt $i/10 — waiting 5s..."
+            sleep 5
+          done
+          echo "❌ Backend health check failed after 10 attempts"
+          docker logs backend
+          exit 1
+
+      - name: Health Check — Frontend Container
+        run: |
+          echo "🏥 Checking frontend..."
+          curl -sf http://localhost:5173/ || {
+            echo "❌ Frontend is not responding"
+            docker logs frontend
+            exit 1
+          }
+          echo "✅ Frontend is healthy!"
 
       - name: Check running containers
         run: docker ps
-
-      - name: Health Check — Containers
-        run: |
-          docker ps --format "{{.Names}}: {{.Status}}" | while read line; do
-            echo "✅ $line"
-          done
 
       - name: Teardown
         if: always()
@@ -173,26 +200,35 @@ jobs:
       - name: Deploy Backend to Render
         run: |
           echo "🚀 Deploying Backend to Render (Production)..."
-          curl -sf -X POST ${{ secrets.RENDER_DEPLOY_HOOK }} || echo "⚠️ Render deploy hook failed"
+          curl -sf -w "\n" -X POST ${{ secrets.RENDER_DEPLOY_HOOK }}
+          echo "✅ Render deploy hook triggered successfully"
 
       - name: Deploy Frontend to Vercel
         run: |
           echo "🚀 Deploying Frontend to Vercel (Production)..."
-          curl -sf -X POST ${{ secrets.VERCEL_DEPLOY_HOOK }} || echo "⚠️ Vercel deploy hook failed"
-
-      - name: Wait for deployments to propagate
-        run: sleep 30
+          curl -sf -w "\n" -X POST ${{ secrets.VERCEL_DEPLOY_HOOK }}
+          echo "✅ Vercel deploy hook triggered successfully"
 
       - name: Health Check — Backend (Production)
         run: |
           echo "🏥 Checking Backend health..."
-          curl -f https://talent-sync-pq7j.onrender.com/ || exit 1
-          echo "✅ Backend is healthy!"
+          for i in 1 2 3 4 5 6; do
+            if curl -sf https://talent-sync-pq7j.onrender.com/health; then
+              echo ""
+              echo "✅ Backend is healthy!"
+              exit 0
+            fi
+            wait=$((i * 15))
+            echo "⏳ Attempt $i/6 — waiting ${wait}s..."
+            sleep $wait
+          done
+          echo "❌ Backend health check failed after retries"
+          exit 1
 
       - name: Health Check — Frontend (Production)
         run: |
           echo "🏥 Checking Frontend health..."
-          curl -f https://talent-sync-green.vercel.app/ || exit 1
+          curl -sf --retry 3 --retry-delay 10 https://talent-sync-green.vercel.app/ || exit 1
           echo "✅ Frontend is healthy!"
 
   # ──────────────────────────────────────────────
@@ -209,9 +245,11 @@ jobs:
       - name: Deploy Backend to Staging
         run: |
           echo "🧪 Deploying Backend to Staging..."
-          curl -sf -X POST ${{ secrets.RENDER_STAGING_DEPLOY_HOOK }} || echo "⚠️ Staging deploy hook failed"
+          curl -sf -w "\n" -X POST ${{ secrets.RENDER_STAGING_DEPLOY_HOOK }}
+          echo "✅ Staging backend deploy triggered"
 
       - name: Deploy Frontend to Staging
         run: |
           echo "🧪 Deploying Frontend to Staging..."
-          curl -sf -X POST ${{ secrets.VERCEL_STAGING_DEPLOY_HOOK }} || echo "⚠️ Staging deploy hook failed"
+          curl -sf -w "\n" -X POST ${{ secrets.VERCEL_STAGING_DEPLOY_HOOK }}
+          echo "✅ Staging frontend deploy triggered"
