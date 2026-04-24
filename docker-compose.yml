@@ -111,6 +111,7 @@ services:
   prometheus:
     image: prom/prometheus
     container_name: prometheus
+    restart: unless-stopped
     volumes:
       - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
     ports:
@@ -119,6 +120,9 @@ services:
   grafana:
     image: grafana/grafana
     container_name: grafana
+    restart: unless-stopped
+    volumes:
+      - grafana_data:/var/lib/grafana
     ports:
       - "3001:3000"
     depends_on:
@@ -130,3 +134,4 @@ volumes:
   kafka_data:
   zookeeper_data:
   zookeeper_log:
+  grafana_data:

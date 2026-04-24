@@ -42,9 +42,13 @@ jobs:
         working-directory: ./frontend
         run: npm ci || npm install
 
+      - name: Security Check
+        working-directory: ./frontend
+        run: npm audit --audit-level=high || echo "Vulnerabilities found"
+
       - name: Lint
         working-directory: ./frontend
-        run: npm run lint || true
+        run: npm run lint || echo "Lint warnings found"
 
       - name: Build
         working-directory: ./frontend
@@ -90,6 +94,10 @@ jobs:
       - name: Install Dependencies
         working-directory: ./Backend
         run: npm ci || npm install
+
+      - name: Security Check
+        working-directory: ./Backend
+        run: npm audit --audit-level=high || echo "Vulnerabilities found"
 
       - name: Generate Prisma Client
         working-directory: ./Backend
